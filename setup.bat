@@ -132,21 +132,40 @@ if %errorLevel% neq 0 (
     echo [ユーザー] ユーザー名とパスワードの設定
     echo -----------------------------------------
     echo.
-    echo 新しいウィンドウでUbuntuが起動します。
+    echo 新しいウィンドウでUbuntuが起動しました。
     echo 以下を入力してください:
     echo.
-    echo   ユーザー名: 好きな名前（例: switch）
-    echo   パスワード: 好きなパスワード
-    echo   ※ パスワードは画面に表示されませんが入力されています
+    echo   1. ユーザー名: 好きな名前（例: switch）
+    echo   2. パスワード: 好きなパスワード
+    echo      ※ パスワードは画面に表示されませんが入力されています
+    echo   3. パスワード再入力（確認）
     echo.
-    echo 入力が完了したら、Ubuntuのウィンドウを閉じて
-    echo このウィンドウに戻ってきてください。
+    echo [重要] 設定完了後、Ubuntuのウィンドウで以下を入力:
+    echo.
+    echo   exit
+    echo.
+    echo と入力してEnterを押してください。
+    echo その後、このウィンドウで何かキーを押してください。
     echo.
 
     pause
 
-    REM Ubuntuが初期化されるのを待つ
-    timeout /t 5 /nobreak >nul
+    REM Ubuntuが確実に終了するまで待つ
+    echo.
+    echo Ubuntuの終了を待っています...
+    timeout /t 3 /nobreak >nul
+
+    REM Ubuntuのプロセスが終了したか確認
+    :wait_ubuntu_close
+    wsl -d Ubuntu-22.04 -e echo "test" >nul 2>&1
+    if %errorLevel% equ 0 (
+        echo [OK] Ubuntuの初期設定が完了しました
+        goto ubuntu_ready
+    )
+    timeout /t 2 /nobreak >nul
+    goto wait_ubuntu_close
+
+    :ubuntu_ready
 
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
