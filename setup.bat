@@ -136,40 +136,56 @@ if %errorLevel% neq 0 (
     echo Ubuntu 22.04を自動インストール中...
     echo.
     echo [ダウンロード] ダウンロード中...（数分かかります）
-    echo ※ 自動で設定されるので何も入力不要です
     echo.
 
-    REM 自動インストール用のスクリプトを作成
-    echo wsl --install -d Ubuntu-22.04 > "%TEMP%\install_ubuntu.ps1"
-    echo Start-Sleep -Seconds 5 >> "%TEMP%\install_ubuntu.ps1"
+    REM Ubuntu 22.04をインストール（--no-launchオプションで起動を抑制）
+    wsl --install -d Ubuntu-22.04 --no-launch
 
-    REM PowerShellでバックグラウンド実行
-    start /wait powershell -ExecutionPolicy Bypass -File "%TEMP%\install_ubuntu.ps1"
+    if %errorLevel% neq 0 (
+        echo [エラー] Ubuntu 22.04のインストールに失敗しました
+        pause
+        exit /b 1
+    )
 
     echo.
-    echo [初期設定] 自動設定を実行中...
-    echo.
+    echo [待機中] インストール完了を待っています...
+    timeout /t 5 /nobreak >nul
 
-    REM デフォルトユーザーを自動作成（パスワードなし）
-    REM Ubuntu-22.04がインストールされるまで待機
+    REM インストールが完了するまで待機
     :wait_ubuntu_install
-    timeout /t 3 /nobreak >nul
     wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
     if %errorLevel% neq 0 (
-        echo [待機中] Ubuntu 22.04のインストール完了を待っています...
+        timeout /t 3 /nobreak >nul
         goto wait_ubuntu_install
     )
 
-    echo [設定] デフォルトユーザーを作成中...
+    echo [完了] Ubuntu 22.04のダウンロードが完了しました
+    echo.
+    echo [初期設定] 自動ユーザー設定を実行中...
 
-    REM rootとして初期設定を実行
-    ubuntu2204.exe config --default-user root >nul 2>&1
+    REM rootユーザーとしてシステムを初期化
+    wsl -d Ubuntu-22.04 -u root bash -c "exit" >nul 2>&1
 
-    REM ユーザー作成（パスワードなし、sudoerに追加）
-    wsl -d Ubuntu-22.04 -u root bash -c "useradd -m -s /bin/bash switchuser && usermod -aG sudo switchuser && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
+    REM ユーザー作成と設定
+    wsl -d Ubuntu-22.04 -u root bash -c "useradd -m -s /bin/bash switchuser 2>/dev/null || true"
+    wsl -d Ubuntu-22.04 -u root bash -c "usermod -aG sudo switchuser 2>/dev/null"
+    wsl -d Ubuntu-22.04 -u root bash -c "mkdir -p /etc/sudoers.d && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
 
-    REM デフォルトユーザーを設定
+    REM デフォルトユーザーを設定（ubuntu2204.exeコマンドを使用）
     ubuntu2204.exe config --default-user switchuser >nul 2>&1
+
+    if %errorLevel% neq 0 (
+        echo [注意] デフォルトユーザー設定に失敗しました
+        echo        レジストリから直接設定します...
+
+        REM レジストリから直接設定する方法
+        reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss" /f >nul 2>&1
+
+        REM WSL設定ファイルを使った方法
+        wsl -d Ubuntu-22.04 -u root bash -c "echo -e '[user]\ndefault=switchuser' > /etc/wsl.conf"
+
+        echo [完了] 設定を適用しました（次回起動時に有効）
+    )
 
     echo [完了] Ubuntu 22.04のインストールと設定が完了しました
     echo         ユーザー名: switchuser（パスワード不要）
@@ -181,6 +197,11 @@ if %errorLevel% neq 0 (
     wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
     echo [設定] sudo権限を自動化しました
 )
+
+REM WSLを一度シャットダウンして設定を反映
+echo [設定反映] WSLを再起動中...
+wsl --shutdown
+timeout /t 3 /nobreak >nul
 
 echo.
 
@@ -229,7 +250,6 @@ echo    ※ 完全自動なので何も入力不要です
 echo    ※ じっくりお待ちください...
 echo.
 
-REM パスワードなしで実行可能
 wsl -d Ubuntu-22.04 bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh"
 
 if %errorLevel% neq 0 (
