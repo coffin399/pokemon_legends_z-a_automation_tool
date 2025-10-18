@@ -4,24 +4,24 @@ chcp 65001 >nul
 cls
 echo.
 echo ========================================
-echo   ðŸŽ® Nintendo Switch ãƒžã‚¯ãƒ­å®Ÿè¡Œ
+echo        Nintendo Switch ƒ}ƒNƒŽÀs
 echo ========================================
 echo.
-echo æº–å‚™:
-echo  1. Nintendo Switchã®ãƒ›ãƒ¼ãƒ ç”»é¢ã‚’é–‹ã
-echo  2. ã€Œã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã€ã‚’é¸æŠž
-echo  3. ã€ŒæŒã¡ã‹ãŸ/é †ç•ªã‚’å¤‰ãˆã‚‹ã€ã‚’é¸æŠž
+echo €”õ:
+echo  1. Nintendo Switch‚Ìƒz[ƒ€‰æ–Ê‚ðŠJ‚­
+echo  2. uƒRƒ“ƒgƒ[ƒ‰[v‚ð‘I‘ð
+echo  3. uŽ‚¿‚©‚½/‡”Ô‚ð•Ï‚¦‚év‚ð‘I‘ð
 echo.
-echo æº–å‚™ãŒã§ããŸã‚‰ä½•ã‹ã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãã ã•ã„...
+echo €”õ‚ª‚Å‚«‚½‚ç‰½‚©ƒL[‚ð‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢...
 pause >nul
 
 echo.
-echo ãƒžã‚¯ãƒ­ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’èµ·å‹•ä¸­...
+echo ƒ}ƒNƒƒvƒƒOƒ‰ƒ€‚ð‹N“®’†...
 echo.
 
-:: WSLçµŒç”±ã§Pythonãƒ—ãƒ­ã‚°ãƒ©ãƒ ã‚’å®Ÿè¡Œ
+:: WSLŒo—R‚ÅPythonƒvƒƒOƒ‰ƒ€‚ðŽÀs
 wsl -d Ubuntu-22.04 -e bash -c "cd ~/switch-macro && sudo python3 switch_macro.py"
 
 echo.
-echo ãƒžã‚¯ãƒ­å®Ÿè¡ŒãŒçµ‚äº†ã—ã¾ã—ãŸ
+echo ƒ}ƒNƒŽÀs‚ªI—¹‚µ‚Ü‚µ‚½
 pause
