@@ -1,5 +1,5 @@
 @echo off
-chcp 65001 >nul
+chcp 932 >nul
 setlocal enabledelayedexpansion
 
 :menu
