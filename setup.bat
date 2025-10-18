@@ -188,11 +188,13 @@ echo [ステップ 4/6] Python環境のセットアップ
 echo -----------------------------------------
 echo.
 echo [パッケージ] 必要なパッケージをインストール中...
-echo    ※ この処理には5?15分かかる場合があります
-echo    ※ コーヒーでも飲んでお待ちください
+echo    ※ この処理には5~15分かかる場合があります
+echo    ※ Ubuntuのパスワード入力が求められます
+echo    ※ パスワードは画面に表示されませんが入力されています
 echo.
 
-wsl -d Ubuntu-22.04 bash ~/switch-macro/scripts/install_dependencies.sh
+REM 対話的にスクリプトを実行（パスワード入力可能）
+wsl -d Ubuntu-22.04 bash -ic "cd ~/switch-macro && bash scripts/install_dependencies.sh"
 
 if %errorLevel% neq 0 (
     echo.
