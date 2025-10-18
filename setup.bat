@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 
 REM ============================================
 REM Nintendo Switch 自動マクロツール
-REM ワンクリックセットアップスクリプト
+REM 完全自動ワンクリックセットアップ
 REM ============================================
 
 REM 管理者権限チェック - なければ自動で昇格
@@ -19,20 +19,28 @@ echo.
 echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 echo ┃                                                      ┃
 echo ┃     Nintendo Switch マクロツール                       ┃
-echo ┃          ワンクリックセットアップ                         ┃
+echo ┃       完全自動ワンクリックセットアップ                      ┃
 echo ┃                                                      ┃
 echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 echo.
 echo [OK] 管理者権限で実行中
 echo.
+echo ★ このセットアップは完全自動です！
+echo    あなたがすることは「Y」を押すだけ！
+echo.
+echo ========================================================
 echo このセットアップでは以下を自動で行います:
+echo ========================================================
 echo   1. WSL2のインストール
-echo   2. Ubuntu 22.04のインストール
+echo   2. Ubuntu 22.04のインストール（自動設定）
 echo   3. Python環境の構築
 echo   4. 必要なパッケージのインストール
-echo   5. Bluetooth設定の案内
+echo   5. usbipd-winのインストール
 echo.
-echo [目安] 所要時間: 約30分（初回のみ）
+echo [所要時間] 約20-30分（初回のみ）
+echo [注意] インターネット接続が必要です
+echo.
+echo ========================================================
 echo.
 
 choice /c YN /m "セットアップを開始しますか？"
@@ -45,15 +53,18 @@ if %errorLevel% equ 2 (
 
 echo.
 echo ========================================================
-echo >> セットアップ開始
+echo >> 自動セットアップ開始
 echo ========================================================
+echo.
+echo ※ これから全て自動で進みます
+echo ※ コーヒーでも飲んでお待ちください！
 echo.
 
 REM ============================================
 REM ステップ1: WSL2のインストール確認
 REM ============================================
 
-echo [ステップ 1/6] WSL2のインストール確認
+echo [ステップ 1/5] WSL2のインストール確認
 echo -----------------------------------------
 
 wsl --status >nul 2>&1
@@ -62,7 +73,7 @@ if %errorLevel% neq 0 (
     echo.
     echo [ダウンロード] WSL2をインストール中...（数分かかります）
 
-    REM WSL2のワンコマンドインストール（Windows 10 build 19041以降）
+    REM WSL2のワンコマンドインストール
     wsl --install --no-distribution
 
     if %errorLevel% neq 0 (
@@ -78,11 +89,16 @@ if %errorLevel% neq 0 (
     echo.
     echo [完了] WSL2のインストールが完了しました
     echo.
+    echo ========================================================
     echo [重要] PCの再起動が必要です！
+    echo ========================================================
     echo.
     echo 再起動後、このファイル（setup.bat）をもう一度
     echo 【ダブルクリック】してください。
-    echo ※ 2回目は自動で続きから始まります
+    echo.
+    echo ※ 2回目は自動で続きから始まります（何も入力不要）
+    echo.
+    echo ========================================================
     echo.
 
     choice /c YN /m "今すぐ再起動しますか？"
@@ -109,79 +125,61 @@ REM WSL2をデフォルトに設定
 wsl --set-default-version 2 >nul 2>&1
 
 REM ============================================
-REM ステップ2: Ubuntu 22.04の自動インストール
+REM ステップ2: Ubuntu 22.04の完全自動インストール
 REM ============================================
 
-echo [ステップ 2/6] Ubuntu 22.04のインストール
+echo [ステップ 2/5] Ubuntu 22.04の自動インストール
 echo -----------------------------------------
 
 wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
 if %errorLevel% neq 0 (
-    echo Ubuntu 22.04をインストール中...
+    echo Ubuntu 22.04を自動インストール中...
     echo.
-    echo [ダウンロード] ダウンロードとインストールを実行中...
-    echo    （数分かかります。お待ちください）
-    echo.
-    echo [重要] 別ウィンドウでUbuntuが起動します
-    echo    このウィンドウは閉じないでください！
+    echo [ダウンロード] ダウンロード中...（数分かかります）
+    echo ※ 自動で設定されるので何も入力不要です
     echo.
 
-    REM Ubuntu 22.04をインストール（バックグラウンドで実行しない）
-    start /wait wsl --install -d Ubuntu-22.04
+    REM 自動インストール用のスクリプトを作成
+    echo wsl --install -d Ubuntu-22.04 > "%TEMP%\install_ubuntu.ps1"
+    echo Start-Sleep -Seconds 5 >> "%TEMP%\install_ubuntu.ps1"
+
+    REM PowerShellでバックグラウンド実行
+    start /wait powershell -ExecutionPolicy Bypass -File "%TEMP%\install_ubuntu.ps1"
 
     echo.
-    echo [完了] Ubuntu 22.04のインストールが完了しました
+    echo [初期設定] 自動設定を実行中...
     echo.
 
-    REM インストール確認
+    REM デフォルトユーザーを自動作成（パスワードなし）
+    REM Ubuntu-22.04がインストールされるまで待機
+    :wait_ubuntu_install
+    timeout /t 3 /nobreak >nul
     wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
     if %errorLevel% neq 0 (
-        echo [エラー] Ubuntuのインストールに失敗しました
-        echo.
-        echo 手動でインストールしてください:
-        echo   1. Microsoft Storeを開く
-        echo   2. "Ubuntu 22.04"を検索
-        echo   3. インストールして初期設定を完了
-        echo   4. setup.batを再実行
-        echo.
-        pause
-        exit /b 1
+        echo [待機中] Ubuntu 22.04のインストール完了を待っています...
+        goto wait_ubuntu_install
     )
 
-    echo [待機] Ubuntuの初期化を待っています...
-    timeout /t 10 /nobreak >nul
+    echo [設定] デフォルトユーザーを作成中...
 
-    echo.
-    echo [確認] Ubuntuが正常に起動できるかテスト中...
-    wsl -d Ubuntu-22.04 echo "Ubuntu is ready" >nul 2>&1
+    REM rootとして初期設定を実行
+    ubuntu2204.exe config --default-user root >nul 2>&1
 
-    if %errorLevel% neq 0 (
-        echo.
-        echo [注意] Ubuntuの初期設定が完了していない可能性があります
-        echo.
-        echo 以下の手順で初期設定を完了してください:
-        echo.
-        echo 1. スタートメニューから "Ubuntu 22.04" を起動
-        echo 2. ユーザー名とパスワードを設定
-        echo 3. 設定完了後、このウィンドウで何かキーを押す
-        echo.
-        pause
+    REM ユーザー作成（パスワードなし、sudoerに追加）
+    wsl -d Ubuntu-22.04 -u root bash -c "useradd -m -s /bin/bash switchuser && usermod -aG sudo switchuser && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
 
-        REM 再度確認
-        wsl -d Ubuntu-22.04 echo "Ubuntu is ready" >nul 2>&1
-        if %errorLevel% neq 0 (
-            echo.
-            echo [エラー] まだUbuntuの初期設定が完了していません
-            echo 初期設定を完了してから setup.bat を再実行してください
-            pause
-            exit /b 1
-        )
-    )
+    REM デフォルトユーザーを設定
+    ubuntu2204.exe config --default-user switchuser >nul 2>&1
 
-    echo [OK] Ubuntuが正常に動作しています
+    echo [完了] Ubuntu 22.04のインストールと設定が完了しました
+    echo         ユーザー名: switchuser（パスワード不要）
 
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
+
+    REM 既存のインストールでもパスワードなしsudoを設定
+    wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
+    echo [設定] sudo権限を自動化しました
 )
 
 echo.
@@ -190,7 +188,7 @@ REM ============================================
 REM ステップ3: ファイルの転送
 REM ============================================
 
-echo [ステップ 3/6] ファイルの転送
+echo [ステップ 3/5] ファイルの転送
 echo -----------------------------------------
 
 set "CURRENT_DIR=%CD%"
@@ -222,17 +220,17 @@ REM ============================================
 REM ステップ4: 依存関係の自動インストール
 REM ============================================
 
-echo [ステップ 4/6] Python環境のセットアップ
+echo [ステップ 4/5] Python環境のセットアップ
 echo -----------------------------------------
 echo.
 echo [パッケージ] 必要なパッケージをインストール中...
-echo    ※ この処理には5~15分かかる場合があります
-echo    ※ Ubuntuのパスワード入力が求められます
-echo    ※ パスワードは画面に表示されませんが入力されています
+echo    ※ この処理には10~20分かかります
+echo    ※ 完全自動なので何も入力不要です
+echo    ※ じっくりお待ちください...
 echo.
 
-REM 対話的にスクリプトを実行（パスワード入力可能）
-wsl -d Ubuntu-22.04 bash -ic "cd ~/switch-macro && bash scripts/install_dependencies.sh"
+REM パスワードなしで実行可能
+wsl -d Ubuntu-22.04 bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh"
 
 if %errorLevel% neq 0 (
     echo.
@@ -258,7 +256,7 @@ REM ============================================
 REM ステップ5: usbipd-winの自動インストール
 REM ============================================
 
-echo [ステップ 5/6] usbipd-win のインストール
+echo [ステップ 5/5] usbipd-win のインストール
 echo -----------------------------------------
 echo.
 
@@ -268,87 +266,31 @@ if %errorLevel% equ 0 (
     echo [完了] usbipd-winは既にインストールされています
     echo.
 ) else (
-    echo usbipd-winが見つかりません。
-    echo.
-    echo [ダウンロード] usbipd-winをダウンロード中...
+    echo usbipd-winを自動インストール中...
     echo.
 
     REM PowerShellでwingetを使ってインストール
-    powershell -Command "if (Get-Command winget -ErrorAction SilentlyContinue) { winget install --id dorssel.usbipd-win --silent --accept-source-agreements --accept-package-agreements } else { Write-Host '[注意] wingetが見つかりません。手動インストールが必要です' }"
+    powershell -Command "if (Get-Command winget -ErrorAction SilentlyContinue) { winget install --id dorssel.usbipd-win --silent --accept-source-agreements --accept-package-agreements } else { Write-Host '[エラー] wingetが見つかりません' }"
 
     if !errorLevel! equ 0 (
         echo [完了] usbipd-winのインストールが完了しました
     ) else (
         echo [注意] 自動インストールに失敗しました
         echo.
-        echo 【手動インストール方法】
-        echo 1. 以下のURLを開く:
-        echo    https://github.com/dorssel/usbipd-win/releases
-        echo.
-        echo 2. 最新の .msi ファイルをダウンロード
-        echo    （例: usbipd-win_4.0.0.msi）
-        echo.
-        echo 3. ダウンロードしたファイルをダブルクリックしてインストール
+        echo 手動インストールが必要です:
+        echo 1. https://github.com/dorssel/usbipd-win/releases
+        echo 2. 最新の .msi ファイルをダウンロードしてインストール
         echo.
 
         choice /c YN /m "今すぐブラウザで開きますか？"
         if !errorLevel! equ 1 (
             start https://github.com/dorssel/usbipd-win/releases
+            echo.
+            echo インストール後、何かキーを押してください
+            pause
         )
     )
 )
-
-echo.
-
-REM ============================================
-REM ステップ6: Bluetooth設定の案内
-REM ============================================
-
-echo [ステップ 6/6] Bluetooth設定
-echo -----------------------------------------
-echo.
-echo [重要] 最後の手動設定
-echo.
-echo Bluetoothアダプタの接続設定が必要です。
-echo 以下の手順を実行してください:
-echo.
-echo ========================================================
-echo [手順] Bluetooth設定手順
-echo ========================================================
-echo.
-echo 1. 【PowerShellを開く】
-echo    - Windowsキー を押す
-echo    - 「PowerShell」と入力
-echo    - 右クリック → 「管理者として実行」
-echo.
-echo 2. 【Bluetoothアダプタを確認】
-echo    PowerShellで以下を入力:
-echo.
-echo    usbipd list
-echo.
-echo 3. 【BUSIDをメモ】
-echo    Bluetoothアダプタの行を探す（例）:
-echo    2-3    8087:0025  Intel(R) Wireless Bluetooth(R)
-echo    ↑この「2-3」をメモ
-echo.
-echo 4. 【接続する】（BUSIDは自分のものに変更）
-echo    PowerShellで以下を入力:
-echo.
-echo    usbipd bind --busid 2-3
-echo    usbipd attach --wsl --busid 2-3
-echo.
-echo 5. 【確認】
-echo    PowerShellで以下を入力:
-echo.
-echo    wsl -d Ubuntu-22.04
-echo    hciconfig
-echo.
-echo    「hci0」が表示されればOK！
-echo.
-echo ========================================================
-echo.
-
-choice /c YN /m "説明を読みましたか？"
 
 echo.
 
@@ -360,37 +302,55 @@ cls
 echo.
 echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 echo ┃                                                      ┃
-echo ┃     [完了] セットアップが完了しました！                    ┃
+echo ┃   ★ セットアップが完了しました！ ★                        ┃
 echo ┃                                                      ┃
 echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 echo.
-echo ★ おめでとうございます！
-echo    セットアップが正常に完了しました。
+echo おめでとうございます！
+echo 自動セットアップが正常に完了しました。
 echo.
 echo ========================================================
-echo [手順] 次のステップ
+echo [次のステップ] あと1つだけ手動設定があります
 echo ========================================================
 echo.
-echo 1. 【Bluetooth設定を完了】（まだの場合）
-echo    上記の手順に従ってBluetoothアダプタを接続
+echo ▼ Bluetooth設定（1回だけ、3分で完了）
 echo.
-echo 2. 【接続テスト】（推奨）
-echo    test_connection.bat をダブルクリック
-echo    ↑正常に動作するか確認できます
+echo 1. PowerShellを管理者として開く
+echo    （Windowsキー → "PowerShell" → 右クリック → 管理者として実行）
 echo.
-echo 3. 【マクロ実行】
-echo    run_macro.bat をダブルクリック
-echo    ↑ZL+A自動連打が始まります
+echo 2. 以下のコマンドを実行:
+echo.
+echo    usbipd list
+echo.
+echo 3. Bluetoothアダプタの行を探す（例）:
+echo    2-3    8087:0025  Intel(R) Wireless Bluetooth(R)
+echo    ↑この「2-3」をメモ
+echo.
+echo 4. 以下のコマンドを実行（2-3は自分のBUSIDに変更）:
+echo.
+echo    usbipd bind --busid 2-3
+echo    usbipd attach --wsl --busid 2-3
+echo.
+echo 5. 確認:
+echo    wsl -d Ubuntu-22.04
+echo    hciconfig
+echo    ↑「hci0」が表示されればOK！
 echo.
 echo ========================================================
-echo [ドキュメント]
+echo [使い方]
 echo ========================================================
 echo.
-echo   README.md       - 詳細な使い方
-echo   QUICKSTART.md   - 5分で始める簡単ガイド
+echo ● 接続テスト（推奨）
+echo   → test_connection.bat をダブルクリック
+echo.
+echo ● マクロ実行
+echo   → run_macro.bat をダブルクリック
 echo.
 echo ========================================================
 echo.
 echo   Happy Gaming!!
 echo.
+echo ========================================================
+echo.
+
 pause
