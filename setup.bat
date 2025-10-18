@@ -2,7 +2,7 @@
 chcp 932 >nul
 setlocal enabledelayedexpansion
 
-REM エラーが発生しても続行する
+REM エラーが発生したら即座に停止して表示
 set "ERROR_OCCURRED=0"
 
 REM ============================================
@@ -15,6 +15,7 @@ net session >nul 2>&1
 if %errorLevel% neq 0 (
     echo 管理者権限が必要です。自動で昇格します...
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    timeout /t 2 >nul
     exit /b
 )
 
@@ -46,14 +47,12 @@ echo.
 echo ========================================================
 echo.
 
-choice /c YN /m "セットアップを開始しますか？"
+choice /c YN /m "セットアップを開始しますか？" /t 60 /d N
 if %errorLevel% equ 2 (
     echo.
     echo セットアップをキャンセルしました。
     echo.
-    echo 何かキーを押すと終了します...
-    pause >nul
-    exit /b 0
+    goto normal_exit
 )
 
 echo.
@@ -106,23 +105,19 @@ if %errorLevel% neq 0 (
     echo ========================================================
     echo.
 
-    choice /c YN /m "今すぐ再起動しますか？"
+    choice /c YN /m "今すぐ再起動しますか？" /t 30 /d N
     if !errorLevel! equ 1 (
         echo.
         echo 10秒後に再起動します...
         shutdown /r /t 10 /c "WSL2インストール完了。再起動中..."
-        echo.
-        echo 何かキーを押すと終了します...
-        pause >nul
+        timeout /t 10 >nul
         exit /b 0
     ) else (
         echo.
         echo 後で手動で再起動してください。
         echo 再起動後、setup.bat をもう一度実行してください。
         echo.
-        echo 何かキーを押すと終了します...
-        pause >nul
-        exit /b 0
+        goto normal_exit
     )
 ) else (
     echo [完了] WSL2が既にインストールされています
@@ -137,10 +132,8 @@ echo.
 echo ========================================================
 echo [ステップ 1 完了] WSL2の確認が完了しました
 echo ========================================================
-echo 何かキーを押して次のステップへ...
-pause >nul
-cls
 echo.
+timeout /t 2 >nul
 
 REM WSL2をデフォルトに設定
 echo [デバッグ] WSL2をデフォルトバージョンに設定中...
@@ -168,229 +161,58 @@ echo ================================================
 echo.
 timeout /t 2 /nobreak >nul
 
-wsl -l -v | findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04" >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [検出結果] Ubuntu 22.04が見つかりませんでした
-    echo.
+REM Ubuntu 22.04が既にインストールされているか確認
+set "UBUNTU_FOUND=0"
+for /f "tokens=1" %%i in ('wsl -l -v 2^>nul ^| findstr /i "Ubuntu"') do (
+    set "TEMP_DISTRO=%%i"
+    REM BOM文字を削除
+    set "TEMP_DISTRO=!TEMP_DISTRO:*=!"
+    echo [検出] ディストリビューション: !TEMP_DISTRO!
+    set "WSL_DISTRO=!TEMP_DISTRO!"
+    set "UBUNTU_FOUND=1"
+    goto ubuntu_found
+)
 
-    REM 他のUbuntuディストリビューションがあるか確認
-    echo [検索中] 他のUbuntuディストリビューションを探しています...
-    wsl -l -v | findstr "Ubuntu" >nul 2>&1
-    if %errorLevel% equ 0 (
-        echo [発見] 別のUbuntuディストリビューションが見つかりました！
-        echo.
-        echo === 見つかったUbuntuディストリビューション ===
-        wsl -l -v | findstr "Ubuntu"
-        echo ================================================
-        echo.
-        echo ========================================================
-        echo [選択] どちらを使用しますか？
-        echo ========================================================
-        echo.
-        echo 1. 既存のUbuntuを使用する（推奨・即完了）
-        echo    → 既にあるUbuntuをそのまま使います
-        echo.
-        echo 2. Ubuntu 22.04を新規インストールする（5-10分）
-        echo    → 新しくUbuntu 22.04をインストールします
-        echo.
+:ubuntu_found
+if %UBUNTU_FOUND% equ 1 (
+    echo [完了] Ubuntu が既にインストールされています
+    echo [使用] ディストリビューション名: "%WSL_DISTRO%"
 
-        choice /c 12 /m "選択してください"
+    REM sudo権限を自動化
+    echo [設定中] sudo権限を自動化しています...
+    wsl -d "%WSL_DISTRO%" bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" 2>nul
 
-        if !errorLevel! equ 1 (
-            echo.
-            echo [選択] 既存のUbuntuを使用します
-            echo.
+    goto skip_ubuntu_install
+)
 
-            echo [検出中] ディストリビューション名を取得しています...
+REM Ubuntu が見つからない場合の処理
+echo [検出結果] Ubuntu が見つかりませんでした
+echo.
+echo ========================================================
+echo [エラー] WSL用のLinuxディストリビューションが見つかりません
+echo ========================================================
+echo.
+echo 以下の手順でUbuntuをインストールしてください:
+echo.
+echo 1. Microsoft Store を開く
+echo 2. "Ubuntu 22.04" で検索
+echo 3. インストールボタンをクリック
+echo 4. インストール完了後、もう一度このsetup.batを実行
+echo.
+echo または、コマンドプロンプトで以下を実行:
+echo    wsl --install Ubuntu-22.04
+echo.
 
-            REM 既存のUbuntuディストリビューション名を取得
-            for /f "tokens=1" %%i in ('wsl -l -v ^| findstr "Ubuntu" ^| findstr /v "docker"') do (
-                set "DISTRO_NAME=%%i"
-                echo [デバッグ] 検出した名前: %%i
-                goto found_distro
-            )
-
-            :found_distro
-            echo [検出完了] ディストリビューション: !DISTRO_NAME!
-
-            REM BOM文字を削除（WSLの出力に含まれる可能性がある）
-            set "DISTRO_NAME=!DISTRO_NAME:*=!"
-            echo [クリーンアップ後] ディストリビューション: !DISTRO_NAME!
-            echo.
-
-            REM sudo権限を自動化
-            echo [設定中] sudo権限を自動化しています...
-            echo [実行] wsl -d "!DISTRO_NAME!" bash -c "whoami"
-            wsl -d "!DISTRO_NAME!" bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
-
-            if !errorLevel! equ 0 (
-                echo [完了] sudo権限を自動化しました
-            ) else (
-                echo [警告] sudo権限の設定に失敗しましたが続行します
-            )
-
-            echo [設定] WSL_DISTRO変数に設定中...
-            REM 以降の処理で使用するディストリビューション名を変更
-            set "WSL_DISTRO=!DISTRO_NAME!"
-
-            echo [確認] WSL_DISTRO = !WSL_DISTRO!
-            echo.
-
-            goto skip_ubuntu_install
-        )
-    )
-
-    echo [完全自動インストール] Ubuntu 22.04をインストールします
-    echo.
-    echo ※ 完全に自動で進みます（入力不要）
-    echo ※ 5-10分お待ちください...
-    echo.
-
-    REM WSLをクリーンアップ
-    echo [準備] WSLをシャットダウン中...
-    wsl --shutdown >nul 2>&1
-    timeout /t 3 /nobreak >nul
-
-    REM 一時フォルダを作成
-    set "TEMP_DIR=%TEMP%\ubuntu_install"
-    if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
-
-    echo [ダウンロード] Ubuntu 22.04 をダウンロード中...（数分かかります）
-    echo              ※ ダウンロードサイズ: 約450MB
-    echo.
-
-    REM PowerShellでAppxパッケージをダウンロード
-    powershell -Command "$ProgressPreference = 'SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://aka.ms/wslubuntu2204' -OutFile '%TEMP_DIR%\Ubuntu2204.appx' -UseBasicParsing -TimeoutSec 600; exit 0 } catch { exit 1 }"
-
-    if %errorLevel% neq 0 (
-        echo [エラー] ダウンロードに失敗しました
-        echo.
-        echo 別の方法を試します...
-
-        REM 代替URL
-        powershell -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://wslstorestorage.blob.core.windows.net/wslblob/Ubuntu2204-221101.AppxBundle' -OutFile '%TEMP_DIR%\Ubuntu2204.appx' -UseBasicParsing" >nul 2>&1
-
-        if !errorLevel! neq 0 (
-            echo [エラー] 全てのダウンロード方法が失敗しました
-            echo インターネット接続を確認してください
-            echo.
-            echo ========================================================
-            echo [エラー発生] インターネット接続を確認してください
-            echo ========================================================
-            echo.
-            set "ERROR_OCCURRED=1"
-            goto error_exit
-        )
-    )
-
-    echo [完了] ダウンロード完了
-    echo.
-    echo [インストール] Ubuntu 22.04をインストール中...
-
-    REM Appxパッケージをインストール
-    powershell -Command "Add-AppxPackage '%TEMP_DIR%\Ubuntu2204.appx'" >nul 2>&1
-
-    if %errorLevel% neq 0 (
-        echo [注意] 通常インストールに失敗しました
-        echo        管理者権限で再試行中...
-        powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command Add-AppxPackage ''%TEMP_DIR%\Ubuntu2204.appx'''" -Wait
-    )
-
-    echo [待機中] インストール完了を確認中...
-    timeout /t 5 /nobreak >nul
-
-    REM インストール確認（最大30秒待機）
-    set WAIT_COUNT=0
-    :wait_ubuntu_install
-    wsl -l -v | findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04" >nul 2>&1
-    if %errorLevel% neq 0 (
-        set /a WAIT_COUNT+=1
-        if !WAIT_COUNT! gtr 10 (
-            echo [エラー] Ubuntu 22.04のインストールを確認できませんでした
-            echo.
-            echo インストール状態を確認:
-            wsl -l -v
-            echo.
-            echo ========================================================
-            echo [エラー発生] インストールが完了しませんでした
-            echo ========================================================
-            echo.
-            set "ERROR_OCCURRED=1"
-            goto error_exit
-        )
-        timeout /t 3 /nobreak >nul
-        goto wait_ubuntu_install
-    )
-
-    echo [完了] Ubuntu 22.04のインストールが確認されました
-    echo.
-
-    REM ディストリビューション名を検出（バージョン表記が異なる可能性があるため）
-    for /f "tokens=1" %%i in ('wsl -l -v ^| findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04"') do (
-        set "DETECTED_DISTRO=%%i"
-        goto found_installed_distro
-    )
-    :found_installed_distro
-
-    echo [検出] ディストリビューション名: !DETECTED_DISTRO!
-    echo.
-    echo [自動設定] 完全自動でユーザーを作成します...
-    echo.
-
-    REM まずrootでアクセスしてユーザーを作成
-    echo [作成] ユーザー switchuser を作成中...
-    wsl -d !DETECTED_DISTRO! -u root -- bash -c "useradd -m -s /bin/bash switchuser 2>/dev/null || echo 'ユーザーは既に存在します'"
-
-    echo [設定] sudo権限を付与中...
-    wsl -d !DETECTED_DISTRO! -u root -- bash -c "usermod -aG sudo switchuser 2>/dev/null"
-    wsl -d !DETECTED_DISTRO! -u root -- bash -c "mkdir -p /etc/sudoers.d && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
-
-    echo [設定] デフォルトユーザーを設定中...
-    wsl -d !DETECTED_DISTRO! -u root -- bash -c "echo -e '[user]\ndefault=switchuser' > /etc/wsl.conf"
-
-    REM ubuntu2204.exe が存在する場合はそれも使う
-    where ubuntu2204.exe >nul 2>&1
-    if %errorLevel% equ 0 (
-        ubuntu2204.exe config --default-user switchuser >nul 2>&1
-    )
-
-    REM WSLを再起動して設定を反映
-    echo [再起動] WSLを再起動して設定を反映中...
-    wsl --shutdown
-    timeout /t 3 /nobreak >nul
-
-    echo [完了] Ubuntu 22.04の完全自動インストールが完了しました
-    echo         ユーザー名: switchuser（パスワード不要）
-    echo.
-
-    REM 一時ファイルを削除
-    if exist "%TEMP_DIR%\Ubuntu2204.appx" del /q "%TEMP_DIR%\Ubuntu2204.appx" >nul 2>&1
-
-    set "WSL_DISTRO=!DETECTED_DISTRO!"
-
-:skip_ubuntu_install
-
-) else (
-    echo [完了] Ubuntu 22.04が既にインストールされています
-
-    REM ディストリビューション名を検出
-    for /f "tokens=1" %%i in ('wsl -l -v ^| findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04"') do (
-        set "WSL_DISTRO=%%i"
-        goto found_existing_distro
-    )
-    :found_existing_distro
-
-    echo [検出] ディストリビューション名: !WSL_DISTRO!
-
-    REM 既存のインストールでもパスワードなしsudoを設定
-    echo [設定] sudo権限を自動化中...
-    wsl -d !WSL_DISTRO! bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
-    echo [完了] sudo権限を自動化しました
+choice /c YN /m "Microsoft Storeを開きますか？" /t 30 /d Y
+if !errorLevel! equ 1 (
+    start ms-windows-store://pdp/?ProductId=9PN20MSR04DW
 )
 
 echo.
-echo [確認] 使用するディストリビューション: %WSL_DISTRO%
-echo.
+echo Ubuntuのインストール後、このsetup.batをもう一度実行してください。
+goto normal_exit
+
+:skip_ubuntu_install
 
 REM ディストリビューション名が設定されているか確認
 if not defined WSL_DISTRO (
@@ -402,17 +224,11 @@ if not defined WSL_DISTRO (
     echo 利用可能なディストリビューション:
     wsl -l -v
     echo.
-    echo ========================================================
-    echo [エラー発生] Ubuntuが見つかりません
-    echo ========================================================
-    echo.
-    echo 何かキーを押すと終了します...
-    pause >nul
-    set "ERROR_OCCURRED=1"
     goto error_exit
 )
 
-echo [確認OK] WSL_DISTRO = "%WSL_DISTRO%"
+echo.
+echo [確認] 使用するディストリビューション: "%WSL_DISTRO%"
 echo.
 
 REM WSLを一度シャットダウンして設定を反映
@@ -427,10 +243,7 @@ echo [ステップ 2 完了] Ubuntu のセットアップが完了しました
 echo 使用ディストリビューション: "%WSL_DISTRO%"
 echo ========================================================
 echo.
-echo 何かキーを押して次のステップへ...
-pause >nul
-cls
-echo.
+timeout /t 2 >nul
 
 REM ============================================
 REM ステップ3: ファイルの転送
@@ -446,43 +259,19 @@ echo [情報] 現在のディレクトリ: %CURRENT_DIR%
 echo [情報] 使用ディストリビューション: "%WSL_DISTRO%"
 echo.
 
-REM もう一度ディストリビューション名を確認
-if not defined WSL_DISTRO (
-    echo.
-    echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-    echo ┃ [エラー] ディストリビューション名が未設定です           ┃
-    echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-    echo.
-    wsl -l -v
-    echo.
-    echo 何かキーを押すと終了します...
-    pause >nul
-    set "ERROR_OCCURRED=1"
-    goto error_exit
-)
-
 echo [実行中] WSL内にフォルダを作成...
-echo [コマンド] wsl -d "%WSL_DISTRO%" bash -c "mkdir -p ~/switch-macro"
 wsl -d "%WSL_DISTRO%" bash -c "mkdir -p ~/switch-macro" 2>&1
 
 if %errorLevel% neq 0 (
     echo [エラー] フォルダ作成に失敗しました
     echo.
-    echo 詳細情報:
-    echo ディストリビューション: %WSL_DISTRO%
-    echo.
-    echo デバッグ: WSLの状態を確認
+    echo WSLの状態:
     wsl -l -v
     echo.
-    echo ========================================================
-    echo [エラー発生] WSLの状態を確認してください
-    echo ========================================================
-    echo.
-    set "ERROR_OCCURRED=1"
     goto error_exit
 )
 
-echo ファイルをコピー中...
+echo [実行中] ファイルをコピー中...
 wsl -d "%WSL_DISTRO%" bash -c "cp -r '%CURRENT_DIR:\=/%'/src ~/switch-macro/ 2>/dev/null || true"
 wsl -d "%WSL_DISTRO%" bash -c "cp -r '%CURRENT_DIR:\=/%'/scripts ~/switch-macro/ 2>/dev/null || true"
 wsl -d "%WSL_DISTRO%" bash -c "cp -r '%CURRENT_DIR:\=/%'/macros ~/switch-macro/ 2>/dev/null || true"
@@ -496,8 +285,7 @@ echo.
 echo ========================================================
 echo [ステップ 3 完了] ファイルの転送が完了しました
 echo ========================================================
-echo 何かキーを押して次のステップへ...
-pause >nul
+timeout /t 2 >nul
 echo.
 
 REM ============================================
@@ -527,11 +315,6 @@ if %errorLevel% neq 0 (
     echo      cd ~/switch-macro
     echo      bash scripts/install_dependencies.sh
     echo.
-    echo ========================================================
-    echo [エラー発生] エラーログを確認してください
-    echo ========================================================
-    echo.
-    set "ERROR_OCCURRED=1"
     goto error_exit
 )
 
@@ -541,8 +324,7 @@ echo.
 echo ========================================================
 echo [ステップ 4 完了] Python環境のセットアップが完了しました
 echo ========================================================
-echo 何かキーを押して次のステップへ...
-pause >nul
+timeout /t 2 >nul
 echo.
 
 REM ============================================
@@ -575,12 +357,12 @@ if %errorLevel% equ 0 (
         echo 2. 最新の .msi ファイルをダウンロードしてインストール
         echo.
 
-        choice /c YN /m "今すぐブラウザで開きますか？"
+        choice /c YN /m "今すぐブラウザで開きますか？" /t 30 /d N
         if !errorLevel! equ 1 (
             start https://github.com/dorssel/usbipd-win/releases
             echo.
             echo インストール後、何かキーを押してください
-            pause
+            pause >nul
         )
     )
 )
@@ -589,8 +371,7 @@ echo.
 echo ========================================================
 echo [ステップ 5 完了] usbipd-winのセットアップが完了しました
 echo ========================================================
-echo 何かキーを押して最終確認へ...
-pause >nul
+timeout /t 2 >nul
 echo.
 
 REM ============================================
@@ -652,9 +433,7 @@ echo.
 echo ========================================================
 echo.
 
-echo 何かキーを押すと終了します...
-pause >nul
-exit /b 0
+goto normal_exit
 
 REM ============================================
 REM エラー発生時の終了処理
@@ -687,3 +466,12 @@ echo.
 echo 何かキーを押すと終了します...
 pause >nul
 exit /b 1
+
+REM ============================================
+REM 正常終了処理
+REM ============================================
+:normal_exit
+echo.
+echo 何かキーを押すと終了します...
+pause >nul
+exit /b 0
