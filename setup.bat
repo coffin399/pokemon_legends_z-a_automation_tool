@@ -133,6 +133,58 @@ echo -----------------------------------------
 
 wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
 if %errorLevel% neq 0 (
+    echo Ubuntu 22.04が見つかりません。インストールします...
+    echo.
+
+    REM 他のUbuntuディストリビューションがあるか確認
+    wsl -l -v | findstr "Ubuntu" >nul 2>&1
+    if %errorLevel% equ 0 (
+        echo.
+        echo [発見] 別のUbuntuディストリビューションが見つかりました:
+        echo.
+        wsl -l -v | findstr "Ubuntu"
+        echo.
+        echo ========================================================
+        echo [選択] どちらを使用しますか？
+        echo ========================================================
+        echo.
+        echo 1. 既存のUbuntuを使用する（推奨）
+        echo    → 既にあるUbuntuをそのまま使います
+        echo.
+        echo 2. Ubuntu 22.04を新規インストールする
+        echo    → 新しくUbuntu 22.04をインストールします
+        echo.
+
+        choice /c 12 /m "選択してください"
+
+        if !errorLevel! equ 1 (
+            echo.
+            echo [選択] 既存のUbuntuを使用します
+            echo.
+
+            REM 既存のUbuntuディストリビューション名を取得
+            for /f "tokens=1" %%i in ('wsl -l -v ^| findstr "Ubuntu" ^| findstr /v "docker"') do (
+                set "DISTRO_NAME=%%i"
+                goto found_distro
+            )
+
+            :found_distro
+            echo [検出] ディストリビューション: !DISTRO_NAME!
+            echo.
+
+            REM sudo権限を自動化
+            echo [設定] sudo権限を自動化中...
+            wsl -d !DISTRO_NAME! bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
+
+            echo [完了] 既存のUbuntuの設定が完了しました
+
+            REM 以降の処理で使用するディストリビューション名を変更
+            set "WSL_DISTRO=!DISTRO_NAME!"
+
+            goto skip_ubuntu_install
+        )
+    )
+
     echo Ubuntu 22.04を自動インストール中...
     echo.
     echo [ダウンロード] ダウンロード中...（数分かかります）
@@ -244,8 +296,14 @@ if %errorLevel% neq 0 (
 
     echo [完了] Ubuntu 22.04のインストールと設定が完了しました
 
+    set "WSL_DISTRO=Ubuntu-22.04"
+
+:skip_ubuntu_install
+
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
+
+    set "WSL_DISTRO=Ubuntu-22.04"
 
     REM 既存のインストールでもパスワードなしsudoを設定
     wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
@@ -271,7 +329,7 @@ echo [フォルダ] 現在のディレクトリ: %CURRENT_DIR%
 echo.
 
 echo WSL内にフォルダを作成中...
-wsl -d Ubuntu-22.04 bash -c "mkdir -p ~/switch-macro"
+wsl -d %WSL_DISTRO% bash -c "mkdir -p ~/switch-macro"
 
 if %errorLevel% neq 0 (
     echo [エラー] フォルダ作成に失敗しました
@@ -280,13 +338,13 @@ if %errorLevel% neq 0 (
 )
 
 echo ファイルをコピー中...
-wsl -d Ubuntu-22.04 bash -c "cp -r '%CURRENT_DIR:\=/%'/src ~/switch-macro/ 2>/dev/null || true"
-wsl -d Ubuntu-22.04 bash -c "cp -r '%CURRENT_DIR:\=/%'/scripts ~/switch-macro/ 2>/dev/null || true"
-wsl -d Ubuntu-22.04 bash -c "cp -r '%CURRENT_DIR:\=/%'/macros ~/switch-macro/ 2>/dev/null || true"
-wsl -d Ubuntu-22.04 bash -c "cp '%CURRENT_DIR:\=/%'/requirements.txt ~/switch-macro/ 2>/dev/null || true"
+wsl -d %WSL_DISTRO% bash -c "cp -r '%CURRENT_DIR:\=/%'/src ~/switch-macro/ 2>/dev/null || true"
+wsl -d %WSL_DISTRO% bash -c "cp -r '%CURRENT_DIR:\=/%'/scripts ~/switch-macro/ 2>/dev/null || true"
+wsl -d %WSL_DISTRO% bash -c "cp -r '%CURRENT_DIR:\=/%'/macros ~/switch-macro/ 2>/dev/null || true"
+wsl -d %WSL_DISTRO% bash -c "cp '%CURRENT_DIR:\=/%'/requirements.txt ~/switch-macro/ 2>/dev/null || true"
 
 REM 実行権限を付与
-wsl -d Ubuntu-22.04 bash -c "chmod +x ~/switch-macro/scripts/*.sh 2>/dev/null || true"
+wsl -d %WSL_DISTRO% bash -c "chmod +x ~/switch-macro/scripts/*.sh 2>/dev/null || true"
 
 echo [完了] ファイルの転送が完了しました
 echo.
@@ -304,7 +362,7 @@ echo    ※ 完全自動なので何も入力不要です
 echo    ※ じっくりお待ちください...
 echo.
 
-wsl -d Ubuntu-22.04 bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh"
+wsl -d %WSL_DISTRO% bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh"
 
 if %errorLevel% neq 0 (
     echo.
@@ -314,7 +372,7 @@ if %errorLevel% neq 0 (
     echo   1. インターネット接続を確認
     echo   2. もう一度 setup.bat を実行
     echo   3. それでもダメなら手動インストール:
-    echo      wsl -d Ubuntu-22.04
+    echo      wsl -d %WSL_DISTRO%
     echo      cd ~/switch-macro
     echo      bash scripts/install_dependencies.sh
     echo.
@@ -406,7 +464,7 @@ echo    usbipd bind --busid 2-3
 echo    usbipd attach --wsl --busid 2-3
 echo.
 echo 5. 確認:
-echo    wsl -d Ubuntu-22.04
+echo    wsl -d %WSL_DISTRO%
 echo    hciconfig
 echo    ↑「hci0」が表示されればOK！
 echo.
