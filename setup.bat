@@ -32,7 +32,7 @@ echo ========================================================
 echo このセットアップでは以下を自動で行います:
 echo ========================================================
 echo   1. WSL2のインストール
-echo   2. Ubuntu 22.04のインストール（自動設定）
+echo   2. Ubuntu 22.04のインストール（完全自動）
 echo   3. Python環境の構築
 echo   4. 必要なパッケージのインストール
 echo   5. usbipd-winのインストール
@@ -131,9 +131,9 @@ REM ============================================
 echo [ステップ 2/5] Ubuntu 22.04の自動インストール
 echo -----------------------------------------
 
-wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
+wsl -l -v | findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04" >nul 2>&1
 if %errorLevel% neq 0 (
-    echo Ubuntu 22.04が見つかりません。インストールします...
+    echo Ubuntu 22.04が見つかりません。
     echo.
 
     REM 他のUbuntuディストリビューションがあるか確認
@@ -148,10 +148,10 @@ if %errorLevel% neq 0 (
         echo [選択] どちらを使用しますか？
         echo ========================================================
         echo.
-        echo 1. 既存のUbuntuを使用する（推奨）
+        echo 1. 既存のUbuntuを使用する（推奨・即完了）
         echo    → 既にあるUbuntuをそのまま使います
         echo.
-        echo 2. Ubuntu 22.04を新規インストールする
+        echo 2. Ubuntu 22.04を新規インストールする（5-10分）
         echo    → 新しくUbuntu 22.04をインストールします
         echo.
 
@@ -185,96 +185,141 @@ if %errorLevel% neq 0 (
         )
     )
 
-    echo Ubuntu 22.04を自動インストール中...
+    echo [完全自動インストール] Ubuntu 22.04をインストールします
     echo.
-    echo [ダウンロード] ダウンロード中...（数分かかります）
+    echo ※ 完全に自動で進みます（入力不要）
+    echo ※ 5-10分お待ちください...
     echo.
-    echo ※ Ubuntuのウィンドウが開きます
-    echo ※ 開いたら、ユーザー名とパスワードを設定してください
-    echo.
-    pause
 
-    REM 既存のWSLプロセスをすべて終了
-    echo [準備] WSLをクリーンアップ中...
-    wsl --shutdown
+    REM WSLをクリーンアップ
+    echo [準備] WSLをシャットダウン中...
+    wsl --shutdown >nul 2>&1
     timeout /t 3 /nobreak >nul
 
-    REM 方法1: Microsoft Storeアプリを直接起動してインストール
-    echo [インストール] Microsoft Storeから取得中...
-    start ms-windows-store://pdp/?ProductId=9PN20MSR04DW
+    REM 一時フォルダを作成
+    set "TEMP_DIR=%TEMP%\ubuntu_install"
+    if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
 
+    echo [ダウンロード] Ubuntu 22.04 をダウンロード中...（数分かかります）
+    echo              ※ ダウンロードサイズ: 約450MB
     echo.
-    echo ========================================================
-    echo [手順] Microsoft Storeでインストールしてください
-    echo ========================================================
-    echo.
-    echo 1. Microsoft Storeが開きます
-    echo 2. 「入手」または「インストール」ボタンをクリック
-    echo 3. ダウンロードとインストールが完了するまで待つ
-    echo 4. 「開く」ボタンが表示されたらクリック
-    echo 5. Ubuntuのウィンドウが開いたら:
-    echo    - ユーザー名を入力（例: switchuser）
-    echo    - パスワードを入力（2回）
-    echo      ※ 簡単なもので OK（例: 1234）
-    echo 6. 設定完了後、Ubuntuのウィンドウを閉じる
-    echo.
-    echo ========================================================
-    echo.
-    echo インストールと初期設定が完了したら、
-    echo 何かキーを押してください...
-    echo.
-    pause
 
-    REM WSLをシャットダウン
-    wsl --shutdown
-    timeout /t 3 /nobreak >nul
+    REM PowerShellでAppxパッケージをダウンロード
+    powershell -Command "$ProgressPreference = 'SilentlyContinue'; try { Invoke-WebRequest -Uri 'https://aka.ms/wslubuntu2204' -OutFile '%TEMP_DIR%\Ubuntu2204.appx' -UseBasicParsing -TimeoutSec 600; exit 0 } catch { exit 1 }"
 
-    REM インストール確認（最大10回リトライ）
+    if %errorLevel% neq 0 (
+        echo [エラー] ダウンロードに失敗しました
+        echo.
+        echo 別の方法を試します...
+
+        REM 代替URL
+        powershell -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://wslstorestorage.blob.core.windows.net/wslblob/Ubuntu2204-221101.AppxBundle' -OutFile '%TEMP_DIR%\Ubuntu2204.appx' -UseBasicParsing" >nul 2>&1
+
+        if !errorLevel! neq 0 (
+            echo [エラー] 全てのダウンロード方法が失敗しました
+            echo インターネット接続を確認してください
+            pause
+            exit /b 1
+        )
+    )
+
+    echo [完了] ダウンロード完了
     echo.
-    echo [確認] Ubuntu 22.04のインストールを確認中...
+    echo [インストール] Ubuntu 22.04をインストール中...
+
+    REM Appxパッケージをインストール
+    powershell -Command "Add-AppxPackage '%TEMP_DIR%\Ubuntu2204.appx'" >nul 2>&1
+
+    if %errorLevel% neq 0 (
+        echo [注意] 通常インストールに失敗しました
+        echo        管理者権限で再試行中...
+        powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-Command Add-AppxPackage ''%TEMP_DIR%\Ubuntu2204.appx'''" -Wait
+    )
+
+    echo [待機中] インストール完了を確認中...
+    timeout /t 5 /nobreak >nul
+
+    REM インストール確認（最大30秒待機）
     set WAIT_COUNT=0
     :wait_ubuntu_install
-    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
+    wsl -l -v | findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04" >nul 2>&1
     if %errorLevel% neq 0 (
         set /a WAIT_COUNT+=1
         if !WAIT_COUNT! gtr 10 (
+            echo [エラー] Ubuntu 22.04のインストールを確認できませんでした
             echo.
-            echo [エラー] Ubuntu 22.04が見つかりません
+            echo インストール状態を確認:
+            wsl -l -v
             echo.
-            echo 以下を確認してください:
-            echo 1. Microsoft Storeでインストールが完了しているか
-            echo 2. 初回起動でユーザー設定を完了したか
-            echo.
-            echo 確認後、何かキーを押してリトライしてください
             pause
-            set WAIT_COUNT=0
-            goto wait_ubuntu_install
+            exit /b 1
         )
-        echo [待機中] Ubuntu 22.04を検索中... (!WAIT_COUNT!/10)
         timeout /t 3 /nobreak >nul
         goto wait_ubuntu_install
     )
 
-    echo [完了] Ubuntu 22.04が見つかりました
+    echo [完了] Ubuntu 22.04のインストールが確認されました
     echo.
-    echo [設定] sudo権限を自動化中...
 
-    REM パスワードなしsudoを設定
-    wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
+    REM ディストリビューション名を検出（バージョン表記が異なる可能性があるため）
+    for /f "tokens=1" %%i in ('wsl -l -v ^| findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04"') do (
+        set "DETECTED_DISTRO=%%i"
+        goto found_installed_distro
+    )
+    :found_installed_distro
 
-    echo [完了] Ubuntu 22.04のインストールと設定が完了しました
+    echo [検出] ディストリビューション名: !DETECTED_DISTRO!
+    echo.
+    echo [自動設定] 完全自動でユーザーを作成します...
+    echo.
 
-    set "WSL_DISTRO=Ubuntu-22.04"
+    REM まずrootでアクセスしてユーザーを作成
+    echo [作成] ユーザー switchuser を作成中...
+    wsl -d !DETECTED_DISTRO! -u root -- bash -c "useradd -m -s /bin/bash switchuser 2>/dev/null || echo 'ユーザーは既に存在します'"
+
+    echo [設定] sudo権限を付与中...
+    wsl -d !DETECTED_DISTRO! -u root -- bash -c "usermod -aG sudo switchuser 2>/dev/null"
+    wsl -d !DETECTED_DISTRO! -u root -- bash -c "mkdir -p /etc/sudoers.d && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
+
+    echo [設定] デフォルトユーザーを設定中...
+    wsl -d !DETECTED_DISTRO! -u root -- bash -c "echo -e '[user]\ndefault=switchuser' > /etc/wsl.conf"
+
+    REM ubuntu2204.exe が存在する場合はそれも使う
+    where ubuntu2204.exe >nul 2>&1
+    if %errorLevel% equ 0 (
+        ubuntu2204.exe config --default-user switchuser >nul 2>&1
+    )
+
+    REM WSLを再起動して設定を反映
+    echo [再起動] WSLを再起動して設定を反映中...
+    wsl --shutdown
+    timeout /t 3 /nobreak >nul
+
+    echo [完了] Ubuntu 22.04の完全自動インストールが完了しました
+    echo         ユーザー名: switchuser（パスワード不要）
+    echo.
+
+    REM 一時ファイルを削除
+    if exist "%TEMP_DIR%\Ubuntu2204.appx" del /q "%TEMP_DIR%\Ubuntu2204.appx" >nul 2>&1
+
+    set "WSL_DISTRO=!DETECTED_DISTRO!"
 
 :skip_ubuntu_install
 
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
 
-    set "WSL_DISTRO=Ubuntu-22.04"
+    REM ディストリビューション名を検出
+    for /f "tokens=1" %%i in ('wsl -l -v ^| findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04"') do (
+        set "WSL_DISTRO=%%i"
+        goto found_existing_distro
+    )
+    :found_existing_distro
+
+    echo [検出] ディストリビューション名: !WSL_DISTRO!
 
     REM 既存のインストールでもパスワードなしsudoを設定
-    wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
+    wsl -d !WSL_DISTRO! bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null" >nul 2>&1
     echo [設定] sudo権限を自動化しました
 )
 
