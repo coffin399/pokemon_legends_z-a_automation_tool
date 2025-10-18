@@ -131,6 +131,7 @@ if %errorLevel% neq 0 (
 echo.
 echo [デバッグ] WSLのバージョン確認
 wsl --set-default-version 2
+echo [デバッグ] WSL2をデフォルトに設定しました
 echo.
 
 echo ========================================================
@@ -138,38 +139,49 @@ echo [ステップ 1 完了] WSL2の確認が完了しました
 echo ========================================================
 echo 何かキーを押して次のステップへ...
 pause >nul
+cls
 echo.
 
 REM WSL2をデフォルトに設定
+echo [デバッグ] WSL2をデフォルトバージョンに設定中...
 wsl --set-default-version 2 >nul 2>&1
+echo [デバッグ] 設定完了
 
 REM 既存のWSL_DISTRO変数をクリア
 set "WSL_DISTRO="
+echo [デバッグ] WSL_DISTRO変数をクリアしました
 
 REM ============================================
 REM ステップ2: Ubuntu 22.04の完全自動インストール
 REM ============================================
 
-echo [ステップ 2/5] Ubuntu 22.04の自動インストール
-echo -----------------------------------------
+echo.
+echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+echo ┃ [ステップ 2/5] Ubuntu 22.04の自動インストール           ┃
+echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 echo.
 echo [確認中] インストール済みのディストリビューションを確認...
 echo.
+echo === インストール済みWSLディストリビューション ===
 wsl -l -v
+echo ================================================
 echo.
+timeout /t 2 /nobreak >nul
 
 wsl -l -v | findstr /C:"Ubuntu-22.04" /C:"Ubuntu 22.04" >nul 2>&1
 if %errorLevel% neq 0 (
-    echo Ubuntu 22.04が見つかりません。
+    echo [検出結果] Ubuntu 22.04が見つかりませんでした
     echo.
 
     REM 他のUbuntuディストリビューションがあるか確認
+    echo [検索中] 他のUbuntuディストリビューションを探しています...
     wsl -l -v | findstr "Ubuntu" >nul 2>&1
     if %errorLevel% equ 0 (
+        echo [発見] 別のUbuntuディストリビューションが見つかりました！
         echo.
-        echo [発見] 別のUbuntuディストリビューションが見つかりました:
-        echo.
+        echo === 見つかったUbuntuディストリビューション ===
         wsl -l -v | findstr "Ubuntu"
+        echo ================================================
         echo.
         echo ========================================================
         echo [選択] どちらを使用しますか？
@@ -189,24 +201,40 @@ if %errorLevel% neq 0 (
             echo [選択] 既存のUbuntuを使用します
             echo.
 
+            echo [検出中] ディストリビューション名を取得しています...
+
             REM 既存のUbuntuディストリビューション名を取得
             for /f "tokens=1" %%i in ('wsl -l -v ^| findstr "Ubuntu" ^| findstr /v "docker"') do (
                 set "DISTRO_NAME=%%i"
+                echo [デバッグ] 検出した名前: %%i
                 goto found_distro
             )
 
             :found_distro
-            echo [検出] ディストリビューション: !DISTRO_NAME!
+            echo [検出完了] ディストリビューション: !DISTRO_NAME!
+
+            REM BOM文字を削除（WSLの出力に含まれる可能性がある）
+            set "DISTRO_NAME=!DISTRO_NAME:*=!"
+            echo [クリーンアップ後] ディストリビューション: !DISTRO_NAME!
             echo.
 
             REM sudo権限を自動化
-            echo [設定] sudo権限を自動化中...
-            wsl -d !DISTRO_NAME! bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
+            echo [設定中] sudo権限を自動化しています...
+            echo [実行] wsl -d "!DISTRO_NAME!" bash -c "whoami"
+            wsl -d "!DISTRO_NAME!" bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
 
-            echo [完了] 既存のUbuntuの設定が完了しました
+            if !errorLevel! equ 0 (
+                echo [完了] sudo権限を自動化しました
+            ) else (
+                echo [警告] sudo権限の設定に失敗しましたが続行します
+            )
 
+            echo [設定] WSL_DISTRO変数に設定中...
             REM 以降の処理で使用するディストリビューション名を変更
             set "WSL_DISTRO=!DISTRO_NAME!"
+
+            echo [確認] WSL_DISTRO = !WSL_DISTRO!
+            echo.
 
             goto skip_ubuntu_install
         )
@@ -366,7 +394,10 @@ echo.
 
 REM ディストリビューション名が設定されているか確認
 if not defined WSL_DISTRO (
-    echo [エラー] ディストリビューション名が設定されていません
+    echo.
+    echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    echo ┃ [エラー] ディストリビューション名が設定されていません   ┃
+    echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
     echo.
     echo 利用可能なディストリビューション:
     wsl -l -v
@@ -375,47 +406,64 @@ if not defined WSL_DISTRO (
     echo [エラー発生] Ubuntuが見つかりません
     echo ========================================================
     echo.
+    echo 何かキーを押すと終了します...
+    pause >nul
     set "ERROR_OCCURRED=1"
     goto error_exit
 )
+
+echo [確認OK] WSL_DISTRO = "%WSL_DISTRO%"
+echo.
 
 REM WSLを一度シャットダウンして設定を反映
 echo [設定反映] WSLを再起動中...
 wsl --shutdown
 timeout /t 3 /nobreak >nul
+echo [完了] WSL再起動完了
 
 echo.
 echo ========================================================
 echo [ステップ 2 完了] Ubuntu のセットアップが完了しました
-echo 使用ディストリビューション: %WSL_DISTRO%
+echo 使用ディストリビューション: "%WSL_DISTRO%"
 echo ========================================================
+echo.
 echo 何かキーを押して次のステップへ...
 pause >nul
+cls
 echo.
 
 REM ============================================
 REM ステップ3: ファイルの転送
 REM ============================================
 
-echo [ステップ 3/5] ファイルの転送
-echo -----------------------------------------
+echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+echo ┃ [ステップ 3/5] ファイルの転送                           ┃
+echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+echo.
 
 set "CURRENT_DIR=%CD%"
-echo [フォルダ] 現在のディレクトリ: %CURRENT_DIR%
-echo [使用ディストリビューション] %WSL_DISTRO%
+echo [情報] 現在のディレクトリ: %CURRENT_DIR%
+echo [情報] 使用ディストリビューション: "%WSL_DISTRO%"
 echo.
 
 REM もう一度ディストリビューション名を確認
 if not defined WSL_DISTRO (
-    echo [エラー] ディストリビューション名が未設定です
+    echo.
+    echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+    echo ┃ [エラー] ディストリビューション名が未設定です           ┃
+    echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    echo.
     wsl -l -v
+    echo.
+    echo 何かキーを押すと終了します...
+    pause >nul
     set "ERROR_OCCURRED=1"
     goto error_exit
 )
 
-echo WSL内にフォルダを作成中...
-echo [実行] wsl -d %WSL_DISTRO% bash -c "mkdir -p ~/switch-macro"
-wsl -d "%WSL_DISTRO%" bash -c "mkdir -p ~/switch-macro" 2>nul
+echo [実行中] WSL内にフォルダを作成...
+echo [コマンド] wsl -d "%WSL_DISTRO%" bash -c "mkdir -p ~/switch-macro"
+wsl -d "%WSL_DISTRO%" bash -c "mkdir -p ~/switch-macro" 2>&1
 
 if %errorLevel% neq 0 (
     echo [エラー] フォルダ作成に失敗しました
