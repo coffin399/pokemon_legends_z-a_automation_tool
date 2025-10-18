@@ -189,98 +189,39 @@ if %errorLevel% neq 0 (
     echo.
     echo [ダウンロード] ダウンロード中...（数分かかります）
     echo.
-
-    REM 方法1: wsl --install を試す
-    wsl --install -d Ubuntu-22.04 >nul 2>&1
-
-    if %errorLevel% neq 0 (
-        echo [方法1失敗] Microsoft Storeからダウンロードします...
-
-        REM 方法2: wingetでインストール
-        powershell -Command "winget install -e --id Canonical.Ubuntu.2204 --silent --accept-source-agreements --accept-package-agreements" >nul 2>&1
-
-        if !errorLevel! neq 0 (
-            echo [方法2失敗] 直接ダウンロードします...
-
-            REM 方法3: 直接Appxパッケージをダウンロードしてインストール
-            powershell -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://aka.ms/wslubuntu2204' -OutFile '%TEMP%\Ubuntu2204.appx' -UseBasicParsing; Add-AppxPackage '%TEMP%\Ubuntu2204.appx'"
-
-            if !errorLevel! neq 0 (
-                echo.
-                echo [エラー] 全ての自動インストール方法が失敗しました
-                echo.
-                echo 手動でインストールしてください:
-                echo 1. Microsoft Storeを開く
-                echo 2. "Ubuntu 22.04" を検索
-                echo 3. インストール
-                echo 4. インストール後、このスクリプトを再実行
-                echo.
-
-                choice /c YN /m "今すぐMicrosoft Storeを開きますか？"
-                if !errorLevel! equ 1 (
-                    start ms-windows-store://pdp/?ProductId=9PN20MSR04DW
-                    echo.
-                    echo インストール後、何かキーを押してください
-                    pause
-
-                    REM 再度確認
-                    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
-                    if !errorLevel! neq 0 (
-                        echo [エラー] Ubuntu 22.04が見つかりません
-                        pause
-                        exit /b 1
-                    )
-                ) else (
-                    pause
-                    exit /b 1
-                )
-            )
-        )
-    )
-
-    echo [待機中] インストール完了を待っています...
-    timeout /t 10 /nobreak >nul
-
-    REM インストールが完了するまで待機（最大60秒）
-    set WAIT_COUNT=0
-    :wait_ubuntu_install
-    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
-    if %errorLevel% neq 0 (
-        set /a WAIT_COUNT+=1
-        if !WAIT_COUNT! gtr 20 (
-            echo [タイムアウト] Ubuntu 22.04のインストールを確認できませんでした
-            echo.
-            echo 手動で確認してください:
-            echo wsl -l -v
-            echo.
-            pause
-            exit /b 1
-        )
-        timeout /t 3 /nobreak >nul
-        goto wait_ubuntu_install
-    )
-
-    echo [完了] Ubuntu 22.04が見つかりました
-    echo.
-    echo [重要] 初回起動を行います
     echo ※ Ubuntuのウィンドウが開きます
-    echo ※ ユーザー名とパスワードを設定してください:
+    echo ※ 開いたら、ユーザー名とパスワードを設定してください
     echo.
-    echo   ユーザー名: switchuser
-    echo   パスワード: （何も入力せずEnter × 2回でもOK）
-    echo.
-    echo ※ 設定が完了したら、Ubuntuのウィンドウを閉じてください
-    echo.
-
     pause
 
-    REM Ubuntuを起動（ユーザーに設定させる）
-    start wsl -d Ubuntu-22.04
+    REM 既存のWSLプロセスをすべて終了
+    echo [準備] WSLをクリーンアップ中...
+    wsl --shutdown
+    timeout /t 3 /nobreak >nul
+
+    REM 方法1: Microsoft Storeアプリを直接起動してインストール
+    echo [インストール] Microsoft Storeから取得中...
+    start ms-windows-store://pdp/?ProductId=9PN20MSR04DW
 
     echo.
-    echo Ubuntuのウィンドウでユーザー設定を完了してください
-    echo 設定完了後、Ubuntuのウィンドウを閉じて、
-    echo 何かキーを押して続行してください
+    echo ========================================================
+    echo [手順] Microsoft Storeでインストールしてください
+    echo ========================================================
+    echo.
+    echo 1. Microsoft Storeが開きます
+    echo 2. 「入手」または「インストール」ボタンをクリック
+    echo 3. ダウンロードとインストールが完了するまで待つ
+    echo 4. 「開く」ボタンが表示されたらクリック
+    echo 5. Ubuntuのウィンドウが開いたら:
+    echo    - ユーザー名を入力（例: switchuser）
+    echo    - パスワードを入力（2回）
+    echo      ※ 簡単なもので OK（例: 1234）
+    echo 6. 設定完了後、Ubuntuのウィンドウを閉じる
+    echo.
+    echo ========================================================
+    echo.
+    echo インストールと初期設定が完了したら、
+    echo 何かキーを押してください...
     echo.
     pause
 
@@ -288,6 +229,33 @@ if %errorLevel% neq 0 (
     wsl --shutdown
     timeout /t 3 /nobreak >nul
 
+    REM インストール確認（最大10回リトライ）
+    echo.
+    echo [確認] Ubuntu 22.04のインストールを確認中...
+    set WAIT_COUNT=0
+    :wait_ubuntu_install
+    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
+    if %errorLevel% neq 0 (
+        set /a WAIT_COUNT+=1
+        if !WAIT_COUNT! gtr 10 (
+            echo.
+            echo [エラー] Ubuntu 22.04が見つかりません
+            echo.
+            echo 以下を確認してください:
+            echo 1. Microsoft Storeでインストールが完了しているか
+            echo 2. 初回起動でユーザー設定を完了したか
+            echo.
+            echo 確認後、何かキーを押してリトライしてください
+            pause
+            set WAIT_COUNT=0
+            goto wait_ubuntu_install
+        )
+        echo [待機中] Ubuntu 22.04を検索中... (!WAIT_COUNT!/10)
+        timeout /t 3 /nobreak >nul
+        goto wait_ubuntu_install
+    )
+
+    echo [完了] Ubuntu 22.04が見つかりました
     echo.
     echo [設定] sudo権限を自動化中...
 
