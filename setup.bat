@@ -2,6 +2,9 @@
 chcp 932 >nul
 setlocal enabledelayedexpansion
 
+REM エラーが発生しても続行する
+set "ERROR_OCCURRED=0"
+
 REM ============================================
 REM Nintendo Switch 自動マクロツール
 REM 完全自動ワンクリックセットアップ
@@ -47,7 +50,9 @@ choice /c YN /m "セットアップを開始しますか？"
 if %errorLevel% equ 2 (
     echo.
     echo セットアップをキャンセルしました。
-    pause
+    echo.
+    echo 何かキーを押すと終了します...
+    pause >nul
     exit /b 0
 )
 
@@ -106,13 +111,17 @@ if %errorLevel% neq 0 (
         echo.
         echo 10秒後に再起動します...
         shutdown /r /t 10 /c "WSL2インストール完了。再起動中..."
-        pause
+        echo.
+        echo 何かキーを押すと終了します...
+        pause >nul
         exit /b 0
     ) else (
         echo.
         echo 後で手動で再起動してください。
         echo 再起動後、setup.bat をもう一度実行してください。
-        pause
+        echo.
+        echo 何かキーを押すと終了します...
+        pause >nul
         exit /b 0
     )
 ) else (
@@ -225,8 +234,9 @@ if %errorLevel% neq 0 (
             echo ========================================================
             echo [エラー発生] インターネット接続を確認してください
             echo ========================================================
-            pause
-            exit /b 1
+            echo.
+            set "ERROR_OCCURRED=1"
+            goto error_exit
         )
     )
 
@@ -261,8 +271,9 @@ if %errorLevel% neq 0 (
             echo ========================================================
             echo [エラー発生] インストールが完了しませんでした
             echo ========================================================
-            pause
-            exit /b 1
+            echo.
+            set "ERROR_OCCURRED=1"
+            goto error_exit
         )
         timeout /t 3 /nobreak >nul
         goto wait_ubuntu_install
@@ -357,16 +368,23 @@ echo [フォルダ] 現在のディレクトリ: %CURRENT_DIR%
 echo.
 
 echo WSL内にフォルダを作成中...
-wsl -d %WSL_DISTRO% bash -c "mkdir -p ~/switch-macro"
+wsl -d %WSL_DISTRO% bash -c "mkdir -p ~/switch-macro" 2>nul
 
 if %errorLevel% neq 0 (
     echo [エラー] フォルダ作成に失敗しました
     echo.
+    echo 詳細情報:
+    echo ディストリビューション: %WSL_DISTRO%
+    echo.
+    echo デバッグ: WSLの状態を確認
+    wsl -l -v
+    echo.
     echo ========================================================
     echo [エラー発生] WSLの状態を確認してください
     echo ========================================================
-    pause
-    exit /b 1
+    echo.
+    set "ERROR_OCCURRED=1"
+    goto error_exit
 )
 
 echo ファイルをコピー中...
@@ -399,7 +417,7 @@ echo    ※ 完全自動なので何も入力不要です
 echo    ※ じっくりお待ちください...
 echo.
 
-wsl -d %WSL_DISTRO% bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh"
+wsl -d %WSL_DISTRO% bash -c "cd ~/switch-macro && bash scripts/install_dependencies.sh" 2>&1
 
 if %errorLevel% neq 0 (
     echo.
@@ -416,8 +434,9 @@ if %errorLevel% neq 0 (
     echo ========================================================
     echo [エラー発生] エラーログを確認してください
     echo ========================================================
-    pause
-    exit /b 1
+    echo.
+    set "ERROR_OCCURRED=1"
+    goto error_exit
 )
 
 echo.
@@ -535,4 +554,38 @@ echo.
 echo ========================================================
 echo.
 
-pause
+echo 何かキーを押すと終了します...
+pause >nul
+exit /b 0
+
+REM ============================================
+REM エラー発生時の終了処理
+REM ============================================
+:error_exit
+echo.
+echo ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+echo ┃                                                      ┃
+echo ┃   ? エラーが発生しました                               ┃
+echo ┃                                                      ┃
+echo ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+echo.
+echo セットアップ中にエラーが発生しました。
+echo 上記のエラーメッセージを確認してください。
+echo.
+echo ========================================================
+echo [対処方法]
+echo ========================================================
+echo.
+echo 1. エラーメッセージをよく読む
+echo 2. インターネット接続を確認
+echo 3. WSLの状態を確認: wsl -l -v
+echo 4. もう一度 setup.bat を実行
+echo.
+echo それでも解決しない場合は、エラーメッセージを
+echo スクリーンショットして、サポートに問い合わせてください。
+echo.
+echo ========================================================
+echo.
+echo 何かキーを押すと終了します...
+pause >nul
+exit /b 1
