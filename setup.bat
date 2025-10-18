@@ -138,57 +138,111 @@ if %errorLevel% neq 0 (
     echo [ダウンロード] ダウンロード中...（数分かかります）
     echo.
 
-    REM Ubuntu 22.04をインストール（--no-launchオプションで起動を抑制）
-    wsl --install -d Ubuntu-22.04 --no-launch
+    REM 方法1: wsl --install を試す
+    wsl --install -d Ubuntu-22.04 >nul 2>&1
 
     if %errorLevel% neq 0 (
-        echo [エラー] Ubuntu 22.04のインストールに失敗しました
-        pause
-        exit /b 1
+        echo [方法1失敗] Microsoft Storeからダウンロードします...
+
+        REM 方法2: wingetでインストール
+        powershell -Command "winget install -e --id Canonical.Ubuntu.2204 --silent --accept-source-agreements --accept-package-agreements" >nul 2>&1
+
+        if !errorLevel! neq 0 (
+            echo [方法2失敗] 直接ダウンロードします...
+
+            REM 方法3: 直接Appxパッケージをダウンロードしてインストール
+            powershell -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri 'https://aka.ms/wslubuntu2204' -OutFile '%TEMP%\Ubuntu2204.appx' -UseBasicParsing; Add-AppxPackage '%TEMP%\Ubuntu2204.appx'"
+
+            if !errorLevel! neq 0 (
+                echo.
+                echo [エラー] 全ての自動インストール方法が失敗しました
+                echo.
+                echo 手動でインストールしてください:
+                echo 1. Microsoft Storeを開く
+                echo 2. "Ubuntu 22.04" を検索
+                echo 3. インストール
+                echo 4. インストール後、このスクリプトを再実行
+                echo.
+
+                choice /c YN /m "今すぐMicrosoft Storeを開きますか？"
+                if !errorLevel! equ 1 (
+                    start ms-windows-store://pdp/?ProductId=9PN20MSR04DW
+                    echo.
+                    echo インストール後、何かキーを押してください
+                    pause
+
+                    REM 再度確認
+                    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
+                    if !errorLevel! neq 0 (
+                        echo [エラー] Ubuntu 22.04が見つかりません
+                        pause
+                        exit /b 1
+                    )
+                ) else (
+                    pause
+                    exit /b 1
+                )
+            )
+        )
     )
 
-    echo.
     echo [待機中] インストール完了を待っています...
-    timeout /t 5 /nobreak >nul
+    timeout /t 10 /nobreak >nul
 
-    REM インストールが完了するまで待機
+    REM インストールが完了するまで待機（最大60秒）
+    set WAIT_COUNT=0
     :wait_ubuntu_install
     wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
     if %errorLevel% neq 0 (
+        set /a WAIT_COUNT+=1
+        if !WAIT_COUNT! gtr 20 (
+            echo [タイムアウト] Ubuntu 22.04のインストールを確認できませんでした
+            echo.
+            echo 手動で確認してください:
+            echo wsl -l -v
+            echo.
+            pause
+            exit /b 1
+        )
         timeout /t 3 /nobreak >nul
         goto wait_ubuntu_install
     )
 
-    echo [完了] Ubuntu 22.04のダウンロードが完了しました
+    echo [完了] Ubuntu 22.04が見つかりました
     echo.
-    echo [初期設定] 自動ユーザー設定を実行中...
+    echo [重要] 初回起動を行います
+    echo ※ Ubuntuのウィンドウが開きます
+    echo ※ ユーザー名とパスワードを設定してください:
+    echo.
+    echo   ユーザー名: switchuser
+    echo   パスワード: （何も入力せずEnter × 2回でもOK）
+    echo.
+    echo ※ 設定が完了したら、Ubuntuのウィンドウを閉じてください
+    echo.
 
-    REM rootユーザーとしてシステムを初期化
-    wsl -d Ubuntu-22.04 -u root bash -c "exit" >nul 2>&1
+    pause
 
-    REM ユーザー作成と設定
-    wsl -d Ubuntu-22.04 -u root bash -c "useradd -m -s /bin/bash switchuser 2>/dev/null || true"
-    wsl -d Ubuntu-22.04 -u root bash -c "usermod -aG sudo switchuser 2>/dev/null"
-    wsl -d Ubuntu-22.04 -u root bash -c "mkdir -p /etc/sudoers.d && echo 'switchuser ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/switchuser && chmod 0440 /etc/sudoers.d/switchuser"
+    REM Ubuntuを起動（ユーザーに設定させる）
+    start wsl -d Ubuntu-22.04
 
-    REM デフォルトユーザーを設定（ubuntu2204.exeコマンドを使用）
-    ubuntu2204.exe config --default-user switchuser >nul 2>&1
+    echo.
+    echo Ubuntuのウィンドウでユーザー設定を完了してください
+    echo 設定完了後、Ubuntuのウィンドウを閉じて、
+    echo 何かキーを押して続行してください
+    echo.
+    pause
 
-    if %errorLevel% neq 0 (
-        echo [注意] デフォルトユーザー設定に失敗しました
-        echo        レジストリから直接設定します...
+    REM WSLをシャットダウン
+    wsl --shutdown
+    timeout /t 3 /nobreak >nul
 
-        REM レジストリから直接設定する方法
-        reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Lxss" /f >nul 2>&1
+    echo.
+    echo [設定] sudo権限を自動化中...
 
-        REM WSL設定ファイルを使った方法
-        wsl -d Ubuntu-22.04 -u root bash -c "echo -e '[user]\ndefault=switchuser' > /etc/wsl.conf"
-
-        echo [完了] 設定を適用しました（次回起動時に有効）
-    )
+    REM パスワードなしsudoを設定
+    wsl -d Ubuntu-22.04 bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD:ALL' | sudo tee /etc/sudoers.d/$(whoami) > /dev/null 2>&1 && sudo chmod 0440 /etc/sudoers.d/$(whoami) 2>/dev/null"
 
     echo [完了] Ubuntu 22.04のインストールと設定が完了しました
-    echo         ユーザー名: switchuser（パスワード不要）
 
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
