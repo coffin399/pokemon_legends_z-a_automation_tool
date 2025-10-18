@@ -122,50 +122,63 @@ if %errorLevel% neq 0 (
     echo [ダウンロード] ダウンロードとインストールを実行中...
     echo    （数分かかります。お待ちください）
     echo.
+    echo [重要] 別ウィンドウでUbuntuが起動します
+    echo    このウィンドウは閉じないでください！
+    echo.
 
-    REM Ubuntu 22.04をインストール
-    wsl --install -d Ubuntu-22.04
+    REM Ubuntu 22.04をインストール（バックグラウンドで実行しない）
+    start /wait wsl --install -d Ubuntu-22.04
 
     echo.
     echo [完了] Ubuntu 22.04のインストールが完了しました
     echo.
-    echo [ユーザー] ユーザー名とパスワードの設定
-    echo -----------------------------------------
-    echo.
-    echo 新しいウィンドウでUbuntuが起動しました。
-    echo 以下を入力してください:
-    echo.
-    echo   1. ユーザー名: 好きな名前（例: switch）
-    echo   2. パスワード: 好きなパスワード
-    echo      ※ パスワードは画面に表示されませんが入力されています
-    echo   3. パスワード再入力（確認）
-    echo.
-    echo [重要] 設定完了後、Ubuntuのウィンドウで以下を入力:
-    echo.
-    echo   exit
-    echo.
-    echo と入力してEnterを押してください。
-    echo その後、このウィンドウで何かキーを押してください。
-    echo.
 
-    pause
-
-    REM Ubuntuが確実に終了するまで待つ
-    echo.
-    echo Ubuntuの終了を待っています...
-    timeout /t 3 /nobreak >nul
-
-    REM Ubuntuのプロセスが終了したか確認
-    :wait_ubuntu_close
-    wsl -d Ubuntu-22.04 -e echo "test" >nul 2>&1
-    if %errorLevel% equ 0 (
-        echo [OK] Ubuntuの初期設定が完了しました
-        goto ubuntu_ready
+    REM インストール確認
+    wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
+    if %errorLevel% neq 0 (
+        echo [エラー] Ubuntuのインストールに失敗しました
+        echo.
+        echo 手動でインストールしてください:
+        echo   1. Microsoft Storeを開く
+        echo   2. "Ubuntu 22.04"を検索
+        echo   3. インストールして初期設定を完了
+        echo   4. setup.batを再実行
+        echo.
+        pause
+        exit /b 1
     )
-    timeout /t 2 /nobreak >nul
-    goto wait_ubuntu_close
 
-    :ubuntu_ready
+    echo [待機] Ubuntuの初期化を待っています...
+    timeout /t 10 /nobreak >nul
+
+    echo.
+    echo [確認] Ubuntuが正常に起動できるかテスト中...
+    wsl -d Ubuntu-22.04 echo "Ubuntu is ready" >nul 2>&1
+
+    if %errorLevel% neq 0 (
+        echo.
+        echo [注意] Ubuntuの初期設定が完了していない可能性があります
+        echo.
+        echo 以下の手順で初期設定を完了してください:
+        echo.
+        echo 1. スタートメニューから "Ubuntu 22.04" を起動
+        echo 2. ユーザー名とパスワードを設定
+        echo 3. 設定完了後、このウィンドウで何かキーを押す
+        echo.
+        pause
+
+        REM 再度確認
+        wsl -d Ubuntu-22.04 echo "Ubuntu is ready" >nul 2>&1
+        if %errorLevel% neq 0 (
+            echo.
+            echo [エラー] まだUbuntuの初期設定が完了していません
+            echo 初期設定を完了してから setup.bat を再実行してください
+            pause
+            exit /b 1
+        )
+    )
+
+    echo [OK] Ubuntuが正常に動作しています
 
 ) else (
     echo [完了] Ubuntu 22.04が既にインストールされています
@@ -186,6 +199,12 @@ echo.
 
 echo WSL内にフォルダを作成中...
 wsl -d Ubuntu-22.04 bash -c "mkdir -p ~/switch-macro"
+
+if %errorLevel% neq 0 (
+    echo [エラー] フォルダ作成に失敗しました
+    pause
+    exit /b 1
+)
 
 echo ファイルをコピー中...
 wsl -d Ubuntu-22.04 bash -c "cp -r '%CURRENT_DIR:\=/%'/src ~/switch-macro/ 2>/dev/null || true"
@@ -231,6 +250,8 @@ if %errorLevel% neq 0 (
     exit /b 1
 )
 
+echo.
+echo [完了] Python環境のセットアップが完了しました
 echo.
 
 REM ============================================
