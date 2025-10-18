@@ -5,11 +5,11 @@ setlocal enabledelayedexpansion
 cls
 echo.
 echo ========================================
-echo   📡 Bluetooth再接続ヘルパー
+echo   Bluetooth�Đڑ��w���p�[
 echo ========================================
 echo.
 
-:: 保存されたBUSIDを読み込む
+:: �ۑ����ꂽBUSID��ǂݍ���
 set "config_file=%~dp0.busid_config"
 set "saved_busid="
 
@@ -18,9 +18,9 @@ if exist "%config_file%" (
 )
 
 if defined saved_busid (
-    echo 前回のBUSID: %saved_busid%
+    echo �O���BUSID: %saved_busid%
     echo.
-    set /p use_saved="このBUSIDを使用しますか？ (Y/N): "
+    set /p use_saved="����BUSID���g�p���܂����H (Y/N): "
 
     if /i "!use_saved!"=="Y" (
         set "busid=!saved_busid!"
@@ -29,48 +29,48 @@ if defined saved_busid (
 )
 
 echo.
-echo まず、Bluetoothアダプタを確認します...
+echo �܂��ABluetooth�A�_�v�^���m�F���܂�...
 echo.
 usbipd list
 echo.
-echo 上記のリストから、Bluetoothアダプタの「BUSID」を確認してください
-echo 例: 2-3, 1-4 など
+echo ��L�̃��X�g����ABluetooth�A�_�v�^�́uBUSID�v���m�F���Ă�������
+echo ��: 2-3, 1-4 �Ȃ�
 echo.
-set /p busid="BUSIDを入力してください: "
+set /p busid="BUSID����͂��Ă�������: "
 
-:: BUSIDを保存
+:: BUSID��ۑ�
 echo !busid!>"%config_file%"
 echo.
-echo ✅ BUSIDを保存しました（次回から自動入力されます）
+echo BUSID��ۑ����܂����i���񂩂玩�����͂���܂��j
 echo.
 
 :attach
-echo Bluetoothアダプタを接続中...
+echo Bluetooth�A�_�v�^��ڑ���...
 echo.
 
-:: バインド
+:: �o�C���h
 usbipd bind --busid %busid% >nul 2>&1
 
-:: アタッチ
+:: �A�^�b�`
 usbipd attach --wsl --busid %busid%
 
 if %errorlevel% equ 0 (
     echo.
-    echo ✅ 接続成功！
+    echo ? �ڑ������I
     echo.
 
-    :: WSL内で確認
-    echo Bluetooth状態を確認中...
-    wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING' && echo '✅ Bluetooth接続OK' || echo '⚠️  Bluetooth接続を確認できませんでした'"
+    :: WSL���Ŋm�F
+    echo Bluetooth��Ԃ��m�F��...
+    wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING' && echo '? Bluetooth�ڑ�OK' || echo '??  Bluetooth�ڑ����m�F�ł��܂���ł���'"
 
 ) else (
     echo.
-    echo ❌ 接続に失敗しました
+    echo �ڑ��Ɏ��s���܂���
     echo.
-    echo トラブルシューティング:
-    echo 1. BUSIDが正しいか確認してください
-    echo 2. PowerShellを管理者として実行していますか？
-    echo 3. usbipd-winがインストールされていますか？
+    echo �g���u���V���[�e�B���O:
+    echo 1. BUSID�����������m�F���Ă�������
+    echo 2. PowerShell���Ǘ��҂Ƃ��Ď��s���Ă��܂����H
+    echo 3. usbipd-win���C���X�g�[������Ă��܂����H
 )
 
 echo.
