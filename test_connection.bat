@@ -3,66 +3,66 @@ chcp 932 >nul
 setlocal enabledelayedexpansion
 
 REM ============================================
-REM Nintendo Switch ãƒžã‚¯ãƒ­ãƒ„ãƒ¼ãƒ«
-REM æŽ¥ç¶šãƒ†ã‚¹ãƒˆã‚¹ã‚¯ãƒªãƒ—ãƒˆ
+REM Nintendo Switch ƒ}ƒNƒƒc[ƒ‹
+REM Ú‘±ƒeƒXƒgƒXƒNƒŠƒvƒg
 REM ============================================
 
 echo.
-echo â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”“
-echo â”ƒ                                                      â”ƒ
-echo â”ƒ     Nintendo Switch æŽ¥ç¶šãƒ†ã‚¹ãƒˆ                         â”ƒ
-echo â”ƒ                                                      â”ƒ
-echo â”—â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”›
+echo „¬„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„­
+echo „«                                                      „«
+echo „«     Nintendo Switch Ú‘±ƒeƒXƒg                         „«
+echo „«                                                      „«
+echo „¯„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„ª„®
 echo.
 
-REM WSLã®ç¢ºèª
+REM WSL‚ÌŠm”F
 wsl -l -v | findstr "Ubuntu-22.04" >nul 2>&1
 if %errorLevel% neq 0 (
-    echo [ã‚¨ãƒ©ãƒ¼] Ubuntu-22.04ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“
+    echo [ƒGƒ‰[] Ubuntu-22.04‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ
     echo.
-    echo ã¾ãš setup.bat ã‚’å®Ÿè¡Œã—ã¦ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã‚’å®Œäº†ã—ã¦ãã ã•ã„ã€‚
+    echo ‚Ü‚¸ setup.bat ‚ðŽÀs‚µ‚ÄƒZƒbƒgƒAƒbƒv‚ðŠ®—¹‚µ‚Ä‚­‚¾‚³‚¢B
     echo.
     pause
     exit /b 1
 )
 
-echo [OK] WSLç’°å¢ƒãŒè¦‹ã¤ã‹ã‚Šã¾ã—ãŸ
+echo [OK] WSLŠÂ‹«‚ªŒ©‚Â‚©‚è‚Ü‚µ‚½
 echo.
-echo ã“ã®ãƒ†ã‚¹ãƒˆã§ã¯ä»¥ä¸‹ã‚’ç¢ºèªã—ã¾ã™:
-echo   1. Switchã¸ã®æŽ¥ç¶š
-echo   2. ãƒœã‚¿ãƒ³æ“ä½œï¼ˆAãƒœã‚¿ãƒ³ã‚’1å›žæŠ¼ã™ï¼‰
-echo   3. æ­£å¸¸ãªåˆ‡æ–­
+echo ‚±‚ÌƒeƒXƒg‚Å‚ÍˆÈ‰º‚ðŠm”F‚µ‚Ü‚·:
+echo   1. Switch‚Ö‚ÌÚ‘±
+echo   2. ƒ{ƒ^ƒ“‘€ìiAƒ{ƒ^ƒ“‚ð1‰ñ‰Ÿ‚·j
+echo   3. ³í‚ÈØ’f
 echo.
-echo ãƒ†ã‚¹ãƒˆæ™‚é–“: ç´„30ç§’
+echo ƒeƒXƒgŽžŠÔ: –ñ30•b
 echo.
 
 pause
 
 echo.
-echo >> ãƒ†ã‚¹ãƒˆé–‹å§‹...
+echo >> ƒeƒXƒgŠJŽn...
 echo ========================================================
 echo.
 
-REM WSLå†…ã§ãƒ†ã‚¹ãƒˆã‚¹ã‚¯ãƒªãƒ—ãƒˆã‚’å®Ÿè¡Œ
+REM WSL“à‚ÅƒeƒXƒgƒXƒNƒŠƒvƒg‚ðŽÀs
 wsl -d Ubuntu-22.04 bash -c "cd ~/switch-macro && source .venv/bin/activate && sudo python3 scripts/test_connection.py"
 
 if %errorLevel% equ 0 (
     echo.
     echo ========================================================
-    echo [æˆåŠŸ] ãƒ†ã‚¹ãƒˆæˆåŠŸï¼
+    echo [¬Œ÷] ƒeƒXƒg¬Œ÷I
     echo ========================================================
     echo.
-    echo ãƒžã‚¯ãƒ­ãƒ„ãƒ¼ãƒ«ã¯æ­£å¸¸ã«å‹•ä½œã—ã¾ã™ã€‚
-    echo run_macro.bat ã‚’ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯ã—ã¦ãƒžã‚¯ãƒ­ã‚’å®Ÿè¡Œã§ãã¾ã™ã€‚
+    echo ƒ}ƒNƒƒc[ƒ‹‚Í³í‚É“®ì‚µ‚Ü‚·B
+    echo run_macro.bat ‚ðƒ_ƒuƒ‹ƒNƒŠƒbƒN‚µ‚Äƒ}ƒNƒ‚ðŽÀs‚Å‚«‚Ü‚·B
 ) else (
     echo.
     echo ========================================================
-    echo [å¤±æ•—] ãƒ†ã‚¹ãƒˆå¤±æ•—
+    echo [Ž¸”s] ƒeƒXƒgŽ¸”s
     echo ========================================================
     echo.
-    echo ãƒˆãƒ©ãƒ–ãƒ«ã‚·ãƒ¥ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ã‚’å®Ÿè¡Œã™ã‚‹ã“ã¨ã‚’æŽ¨å¥¨ã—ã¾ã™ã€‚
+    echo ƒgƒ‰ƒuƒ‹ƒVƒ…[ƒeƒBƒ“ƒO‚ðŽÀs‚·‚é‚±‚Æ‚ð„§‚µ‚Ü‚·B
     echo.
-    choice /c YN /m "ãƒˆãƒ©ãƒ–ãƒ«ã‚·ãƒ¥ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ã‚’å®Ÿè¡Œã—ã¾ã™ã‹ï¼Ÿ"
+    choice /c YN /m "ƒgƒ‰ƒuƒ‹ƒVƒ…[ƒeƒBƒ“ƒO‚ðŽÀs‚µ‚Ü‚·‚©H"
     if !errorLevel! equ 1 (
         wsl -d Ubuntu-22.04 bash ~/switch-macro/scripts/troubleshoot.sh
     )
