@@ -15,6 +15,7 @@ echo.
 echo 準備ができたら何かキーを押してください...
 pause >nul
 
+
 echo.
 echo マクロプログラムを起動中...
 echo.

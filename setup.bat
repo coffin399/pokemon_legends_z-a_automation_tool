@@ -349,6 +349,6 @@ echo   QUICKSTART.md   - 5分で始める簡単ガイド
 echo.
 echo ========================================================
 echo.
-echo    Happy Gaming!
+echo   Happy Gaming!!
 echo.
 pause

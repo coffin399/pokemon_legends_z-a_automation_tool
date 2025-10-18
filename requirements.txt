@@ -1,11 +1,11 @@
-# Nintendo Switch マクロツール - 依存パッケージ
+# Nintendo Switch �}�N���c�[�� - �ˑ��p�b�P�[�W
 
-# NXBT - Nintendo Switch Bluetooth通信ライブラリ
-# Switchとの接続・コントローラーエミュレーション
+# NXBT - Nintendo Switch Bluetooth�ʐM���C�u����
+# Switch�Ƃ̐ڑ��E�R���g���[���[�G�~�����[�V����
 nxbt>=0.1.4
 
-# 以下は nxbt の依存関係として自動インストールされます:
-# - dbus-python: D-Bus通信用
-# - blessed: ターミナルUI用
-# - pynput: キーボード/マウス入力用
-# - cryptography: 暗号化通信用
+# �ȉ��� nxbt �̈ˑ��֌W�Ƃ��Ď����C���X�g�[������܂�:
+# - dbus-python: D-Bus�ʐM�p
+# - blessed: �^�[�~�i��UI�p
+# - pynput: �L�[�{�[�h/�}�E�X���͗p
+# - cryptography: �Í����ʐM�p
