@@ -179,10 +179,12 @@ if %errorlevel% equ 0 (
     echo Bluetoothアダプタの初期化中... (5秒)
     timeout /t 5 >nul
 
-    :: 状態確認
+    :: 状態確認（UTF-8をShift-JISに変換）
     echo Bluetooth状態を確認中...
     echo.
-    wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig"
+    echo --- hciconfig の実行結果 ---
+    wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | iconv -f UTF-8 -t SHIFT_JIS//TRANSLIT"
+    echo ---------------------------
     echo.
 
     wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'"
@@ -218,15 +220,26 @@ echo   接続テスト
 echo ========================================
 echo.
 
-echo [1/3] Bluetooth確認...
+echo [1/4] WSL接続確認...
+wsl -d %WSL_DISTRO_NAME% -e bash -c "echo 'OK'" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo   [OK] WSL接続 OK
+) else (
+    echo   [NG] WSL接続 NG - WSLが起動していません
+)
+
+echo [2/4] Bluetooth確認...
 wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] Bluetooth OK
+
+    :: Bluetoothの詳細情報（Shift-JIS変換）
+    wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | head -n 2 | iconv -f UTF-8 -t SHIFT_JIS//TRANSLIT" 2>nul
 ) else (
     echo   [NG] Bluetooth NG - 再接続が必要です
 )
 
-echo [2/3] NXBT確認...
+echo [3/4] NXBT確認...
 wsl -d %WSL_DISTRO_NAME% -e bash -c "which nxbt" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] NXBT OK
@@ -234,13 +247,23 @@ if %errorlevel% equ 0 (
     echo   [NG] NXBT NG - 再インストールが必要です
 )
 
-echo [3/3] マクロファイル確認...
+echo [4/4] マクロファイル確認...
 wsl -d %WSL_DISTRO_NAME% -e bash -c "test -f ~/switch-macro/src/switch_macro.py" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] マクロファイル OK
 ) else (
     echo   [NG] マクロファイル NG - ファイルが見つかりません
 )
+
+echo.
+echo ========================================
+echo   詳細情報
+echo ========================================
+echo.
+
+:: Bluetoothサービス状態確認
+echo Bluetoothサービス状態:
+wsl -d %WSL_DISTRO_NAME% -e bash -c "service bluetooth status 2>/dev/null | grep -q 'running' && echo '[実行中] bluetooth service is running' || echo '[停止中] bluetooth service is not running'" 2>nul
 
 echo.
 echo テスト完了
