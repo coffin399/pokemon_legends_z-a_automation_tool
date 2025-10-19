@@ -182,6 +182,15 @@ fi
 echo -n "Bluetooth設定フォルダを準備中... "
 sudo mkdir -p /var/run/bluetooth
 sudo chmod 755 /var/run/bluetooth
+
+# nxbtが使用するsystemd設定ディレクトリも作成
+sudo mkdir -p /run/systemd/system/bluetooth.service.d
+sudo chmod 755 /run/systemd/system/bluetooth.service.d
+
+# systemd設定ディレクトリにも権限を設定
+sudo mkdir -p /etc/systemd/system/bluetooth.service.d
+sudo chmod 755 /etc/systemd/system/bluetooth.service.d
+
 echo -e "${GREEN}✓${NC}"
 
 # D-Bus設定ファイルの作成（nxbt用）
@@ -768,6 +777,8 @@ Switchに接続してLとRボタンを同時に押す操作を実行します。
 
 import nxbt
 import time
+import os
+import sys
 
 def main():
     print("=" * 50)
@@ -775,9 +786,27 @@ def main():
     print("=" * 50)
     print()
 
+    # 権限チェック
+    if os.geteuid() != 0:
+        print("⚠️  このマクロは管理者権限が必要です")
+        print()
+        print("再実行しています...")
+        print()
+        # sudoで自分自身を再実行
+        os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
+
     # NXBTインスタンスの作成
     print("🔧 初期化中...")
-    nx = nxbt.Nxbt()
+    try:
+        nx = nxbt.Nxbt()
+    except Exception as e:
+        print(f"❌ 初期化エラー: {e}")
+        print()
+        print("対処方法:")
+        print("  1. Bluetoothサービスを再起動してみてください")
+        print("     sudo systemctl restart bluetooth")
+        print("  2. もう一度マクロを実行してください")
+        return
 
     print()
     print("📡 利用可能なBluetoothアダプタ:")
@@ -855,6 +884,8 @@ def main():
         print("  1. Switchの「持ちかた/順番を変える」画面を開いているか確認")
         print("  2. Bluetoothが有効になっているか確認")
         print("  3. 他のコントローラーを切断してみる")
+        print("  4. Bluetoothサービスを再起動:")
+        print("     sudo systemctl restart bluetooth")
         return
 
 if __name__ == "__main__":
