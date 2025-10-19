@@ -67,6 +67,12 @@ PACKAGES=(
     python3-dev
     gir1.2-gtk-3.0
     libgirepository1.0-dev
+    libgirepository-2.0-0
+    libgirepository-2.0-dev
+    gobject-introspection
+    libglib2.0-dev
+    meson
+    ninja-build
 )
 
 echo "インストール対象パッケージ:"
@@ -169,7 +175,29 @@ echo "  - pydbus (D-Bus Python バインディング)"
 echo "  - PyGObject (GObject イントロスペクション)"
 echo
 
-pip install nxbt pydbus PyGObject
+# PyGObjectのインストールを試みる
+echo "PyGObjectをインストール中..."
+if ! pip install PyGObject 2>&1 | tee /tmp/pygobject_install.log; then
+    echo
+    echo -e "${YELLOW}⚠️  PyGObjectのソースからのビルドに失敗しました${NC}"
+    echo "システムパッケージ版をインストールします..."
+
+    # システムパッケージ版をインストール
+    sudo apt install -y python3-gi python3-gi-cairo
+
+    # システムパッケージへのシンボリックリンクを作成
+    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
+    VENV_SITE_PACKAGES="$PROJECT_DIR/.venv/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages"
+
+    echo "システムパッケージへのリンクを作成しています..."
+    ln -sf /usr/lib/python3/dist-packages/gi "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+    ln -sf /usr/lib/python3/dist-packages/cairo "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+
+    echo -e "${GREEN}✅ システムパッケージ版のPyGObjectを使用します${NC}"
+fi
+
+# 残りのライブラリをインストール
+pip install nxbt pydbus
 
 echo
 echo -e "${GREEN}✅ Pythonライブラリのインストールが完了しました${NC}"
