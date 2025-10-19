@@ -6,24 +6,24 @@ setlocal enabledelayedexpansion
 cls
 echo.
 echo ========================================
-echo   Switch マクロ コントロールパネル
+echo   Nintendo Switch マクロ コントロールパネル
 echo ========================================
 echo.
 
 :: マクロ状態確認
 wsl -d Ubuntu-22.04 -e bash -c "pgrep -f switch_macro.py > /dev/null" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo 状態: マクロ実行中
+    echo 状態: [実行中] マクロ実行中
 ) else (
-    echo 状態: マクロ停止中
+    echo 状態: [停止中] マクロ停止中
 )
 
 :: Bluetooth状態確認
 wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo Bluetooth: 接続済み
+    echo Bluetooth: [接続済] 接続済み
 ) else (
-    echo Bluetooth: 未接続
+    echo Bluetooth: [未接続] 未接続
 )
 
 echo.
@@ -67,7 +67,7 @@ echo マクロを起動中...
 start "Switch Macro" wsl -d Ubuntu-22.04 -e bash -c "cd ~/switch-macro && sudo python3 src/switch_macro.py"
 timeout /t 2 >nul
 echo.
-echo ? マクロを起動しました
+echo [完了] マクロを起動しました
 echo    新しいウィンドウで実行中です
 echo.
 pause
@@ -81,7 +81,7 @@ echo   マクロ停止
 echo ========================================
 echo.
 wsl -d Ubuntu-22.04 -e bash -c "sudo pkill -f switch_macro.py"
-echo マクロを停止しました
+echo [完了] マクロを停止しました
 echo.
 pause
 goto menu
@@ -119,25 +119,25 @@ echo.
 echo [1/3] Bluetooth確認...
 wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo   ? Bluetooth OK
+    echo   [OK] Bluetooth OK
 ) else (
-    echo   ? Bluetooth NG - 再接続が必要です
+    echo   [NG] Bluetooth NG - 再接続が必要です
 )
 
 echo [2/3] NXBT確認...
 wsl -d Ubuntu-22.04 -e bash -c "which nxbt" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo   ? NXBT OK
+    echo   [OK] NXBT OK
 ) else (
-    echo   ? NXBT NG - 再インストールが必要です
+    echo   [NG] NXBT NG - 再インストールが必要です
 )
 
 echo [3/3] マクロファイル確認...
 wsl -d Ubuntu-22.04 -e bash -c "test -f ~/switch-macro/src/switch_macro.py" >nul 2>&1
 if %errorlevel% equ 0 (
-    echo   ? マクロファイル OK
+    echo   [OK] マクロファイル OK
 ) else (
-    echo   ? マクロファイル NG - ファイルが見つかりません
+    echo   [NG] マクロファイル NG - ファイルが見つかりません
 )
 
 echo.

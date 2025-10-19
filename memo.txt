@@ -1,0 +1,14 @@
+# 1. WSLを起動
+wsl -d Ubuntu-22.04
+
+# 2. ホームディレクトリに移動
+cd ~
+
+# 3. setup_wsl.shをコピー（Windowsから）
+cp /mnt/c/Users/YourName/Downloads/pokemon_legends_z-a_money_farm_tool/scripts/setup_wsl.sh ~/
+
+# 4. 実行権限を付与
+chmod +x setup_wsl.sh
+
+# 5. 実行
+./setup_wsl.sh

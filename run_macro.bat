@@ -4,7 +4,7 @@ chcp 932 >nul
 cls
 echo.
 echo ========================================
-echo   ? Nintendo Switch マクロ実行
+echo   Nintendo Switch マクロ実行
 echo ========================================
 echo.
 echo 準備:
