@@ -25,8 +25,7 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 # --- ステップ1: 依存関係のインストール ---
 echo -e "${GREEN}[ステップ 1/4] 必要なパッケージをインストールします...${NC}"
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv bluez libbluetooth-dev libhidapi-dev git
-echo -e "${GREEN}✅ パッケージのインストールが完了しました。${NC}"
+sudo apt-get install -y python3 python3-pip python3-venv bluez libbluetooth-dev libhidapi-dev git build-essential libdbus-1-dev python3-dev pkg-configecho -e "${GREEN}✅ パッケージのインストールが完了しました。${NC}"
 echo
 
 # --- ステップ2: Bluetoothサービスの有効化 ---
