@@ -41,9 +41,9 @@ class SwitchMacro:
                 raise Exception("コントローラーの作成に失敗しました")
 
             # 接続の安定化のため少し待機
-            time.sleep(2)
+            time.sleep(6)
 
-            print("✅ 接続成功！ コントローラーとして認識されました")
+            print("✅ 接続成功！ PROコントローラーとして認識されました。その後にキャラクターを操作するコントローラーを接続してください。")
             self.is_connected = True
             return True
 
