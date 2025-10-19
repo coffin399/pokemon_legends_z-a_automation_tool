@@ -1,182 +1,182 @@
 #!/bin/bash
 
-# --- F•t‚¯—p‚Ì•Ï” ---
+# --- è‰²ä»˜ã‘ç”¨ã®å¤‰æ•° ---
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# --- Ý’è ---
+# --- è¨­å®š ---
 PROJECT_DIR="$HOME/switch-macro"
 MACRO_SCRIPT="src/switch_macro.py"
 
-# --- ŠÖ”’è‹` ---
+# --- é–¢æ•°å®šç¾© ---
 
-# ó‘Ô•\Ž¦
+# çŠ¶æ…‹è¡¨ç¤º
 display_status() {
     echo "========================================"
-    echo "  Nintendo Switch ƒ}ƒNƒ ƒRƒ“ƒgƒ[ƒ‹ƒpƒlƒ‹"
+    echo "  Nintendo Switch ãƒžã‚¯ãƒ­ ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ãƒ‘ãƒãƒ«"
     echo "========================================"
     echo
 
-    # ƒ}ƒNƒó‘ÔŠm”F
+    # ãƒžã‚¯ãƒ­çŠ¶æ…‹ç¢ºèª
     if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
-        echo -e "ó‘Ô      : ${GREEN}[ŽÀs’†]${NC} ƒ}ƒNƒŽÀs’†"
+        echo -e "çŠ¶æ…‹      : ${GREEN}[å®Ÿè¡Œä¸­]${NC} ãƒžã‚¯ãƒ­å®Ÿè¡Œä¸­"
     else
-        echo -e "ó‘Ô      : ${YELLOW}[’âŽ~’†]${NC} ƒ}ƒNƒ’âŽ~’†"
+        echo -e "çŠ¶æ…‹      : ${YELLOW}[åœæ­¢ä¸­]${NC} ãƒžã‚¯ãƒ­åœæ­¢ä¸­"
     fi
 
-    # Bluetoothó‘ÔŠm”F
+    # BluetoothçŠ¶æ…‹ç¢ºèª
     if hciconfig 2>/dev/null | grep -q "UP RUNNING"; then
-        echo -e "Bluetooth : ${GREEN}[Ú‘±Ï]${NC} ƒAƒ_ƒvƒ^—LŒø"
+        echo -e "Bluetooth : ${GREEN}[æŽ¥ç¶šæ¸ˆ]${NC} ã‚¢ãƒ€ãƒ—ã‚¿æœ‰åŠ¹"
     else
-        echo -e "Bluetooth : ${RED}[–¢Ú‘±]${NC} ƒAƒ_ƒvƒ^–³Œø‚Ü‚½‚ÍƒGƒ‰["
+        echo -e "Bluetooth : ${RED}[æœªæŽ¥ç¶š]${NC} ã‚¢ãƒ€ãƒ—ã‚¿ç„¡åŠ¹ã¾ãŸã¯ã‚¨ãƒ©ãƒ¼"
     fi
 
     echo
     echo "========================================"
     echo
-    echo "[1] ƒ}ƒNƒŠJŽn"
-    echo "[2] ƒ}ƒNƒ’âŽ~"
-    echo "[3] BluetoothÄ‹N“®"
-    echo "[4] ŠÂ‹«ƒ`ƒFƒbƒN"
-    echo "[5] ó‘Ô‚ðXV"
-    echo "[0] I—¹"
+    echo "[1] ãƒžã‚¯ãƒ­é–‹å§‹"
+    echo "[2] ãƒžã‚¯ãƒ­åœæ­¢"
+    echo "[3] Bluetoothå†èµ·å‹•"
+    echo "[4] ç’°å¢ƒãƒã‚§ãƒƒã‚¯"
+    echo "[5] çŠ¶æ…‹ã‚’æ›´æ–°"
+    echo "[0] çµ‚äº†"
     echo
     echo "========================================"
 }
 
-# ƒ}ƒNƒŠJŽn
+# ãƒžã‚¯ãƒ­é–‹å§‹
 start_macro() {
     clear
     echo "========================================"
-    echo "  ƒ}ƒNƒŠJŽn"
+    echo "  ãƒžã‚¯ãƒ­é–‹å§‹"
     echo "========================================"
     echo
     if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
-        echo -e "${YELLOW}[Œx] ƒ}ƒNƒ‚ÍŠù‚ÉŽÀs’†‚Å‚·B${NC}"
-        read -p "EnterƒL[‚ð‰Ÿ‚µ‚Äƒƒjƒ…[‚É–ß‚è‚Ü‚·..."
+        echo -e "${YELLOW}[è­¦å‘Š] ãƒžã‚¯ãƒ­ã¯æ—¢ã«å®Ÿè¡Œä¸­ã§ã™ã€‚${NC}"
+        read -p "Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«æˆ»ã‚Šã¾ã™..."
         return
     fi
 
-    echo "Switch‚ÅuŽ‚¿‚©‚½/‡”Ô‚ð•Ï‚¦‚év‚ðŠJ‚¢‚Ä‚­‚¾‚³‚¢"
-    read -p "€”õ‚ª‚Å‚«‚½‚çEnterƒL[‚ð‰Ÿ‚µ‚Ä‚­‚¾‚³‚¢..."
+    echo "Switchã§ã€ŒæŒã¡ã‹ãŸ/é †ç•ªã‚’å¤‰ãˆã‚‹ã€ã‚’é–‹ã„ã¦ãã ã•ã„"
+    read -p "æº–å‚™ãŒã§ããŸã‚‰Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãã ã•ã„..."
 
-    echo "ƒ}ƒNƒ‚ðV‚µ‚¢ƒEƒBƒ“ƒhƒE‚Å‹N“®’†..."
-    
-    # gnome-terminal‚ðŽg‚Á‚Ä•ÊƒEƒBƒ“ƒhƒE‚ÅŽÀs
+    echo "ãƒžã‚¯ãƒ­ã‚’æ–°ã—ã„ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã§èµ·å‹•ä¸­..."
+
+    # gnome-terminalã‚’ä½¿ã£ã¦åˆ¥ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã§å®Ÿè¡Œ
     gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$MACRO_SCRIPT'; exec bash"
-    
+
     sleep 2
     echo
-    echo -e "${GREEN}[Š®—¹] ƒ}ƒNƒ‚ð‹N“®‚µ‚Ü‚µ‚½B${NC}"
-    echo "   V‚µ‚¢ƒ^[ƒ~ƒiƒ‹ƒEƒBƒ“ƒhƒE‚ÅŽÀs’†‚Å‚·B"
+    echo -e "${GREEN}[å®Œäº†] ãƒžã‚¯ãƒ­ã‚’èµ·å‹•ã—ã¾ã—ãŸã€‚${NC}"
+    echo "   æ–°ã—ã„ã‚¿ãƒ¼ãƒŸãƒŠãƒ«ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã§å®Ÿè¡Œä¸­ã§ã™ã€‚"
     echo
-    read -p "EnterƒL[‚ð‰Ÿ‚µ‚Äƒƒjƒ…[‚É–ß‚è‚Ü‚·..."
+    read -p "Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«æˆ»ã‚Šã¾ã™..."
 }
 
-# ƒ}ƒNƒ’âŽ~
+# ãƒžã‚¯ãƒ­åœæ­¢
 stop_macro() {
     clear
     echo "========================================"
-    echo "  ƒ}ƒNƒ’âŽ~"
+    echo "  ãƒžã‚¯ãƒ­åœæ­¢"
     echo "========================================"
     echo
     if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
         sudo pkill -f "$MACRO_SCRIPT"
-        echo -e "${GREEN}[Š®—¹] ƒ}ƒNƒ‚ð’âŽ~‚µ‚Ü‚µ‚½B${NC}"
+        echo -e "${GREEN}[å®Œäº†] ãƒžã‚¯ãƒ­ã‚’åœæ­¢ã—ã¾ã—ãŸã€‚${NC}"
     else
-        echo -e "${YELLOW}[î•ñ] ƒ}ƒNƒ‚ÍŽÀs‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ‚Å‚µ‚½B${NC}"
+        echo -e "${YELLOW}[æƒ…å ±] ãƒžã‚¯ãƒ­ã¯å®Ÿè¡Œã•ã‚Œã¦ã„ã¾ã›ã‚“ã§ã—ãŸã€‚${NC}"
     fi
     echo
-    read -p "EnterƒL[‚ð‰Ÿ‚µ‚Äƒƒjƒ…[‚É–ß‚è‚Ü‚·..."
+    read -p "Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«æˆ»ã‚Šã¾ã™..."
 }
 
-# BluetoothÄ‹N“®
+# Bluetoothå†èµ·å‹•
 reconnect_bt() {
     clear
     echo "========================================"
-    echo "  BluetoothÄ‹N“®"
+    echo "  Bluetoothå†èµ·å‹•"
     echo "========================================"
     echo
-    echo "BluetoothƒT[ƒrƒX‚ðÄ‹N“®‚µ‚Ü‚·..."
+    echo "Bluetoothã‚µãƒ¼ãƒ“ã‚¹ã‚’å†èµ·å‹•ã—ã¾ã™..."
     sudo systemctl restart bluetooth
-    
+
     if [ $? -eq 0 ]; then
-        echo "ƒT[ƒrƒXÄ‹N“®ƒRƒ}ƒ“ƒh‚ð‘—M‚µ‚Ü‚µ‚½B"
-        echo "ƒAƒ_ƒvƒ^‚Ì‰Šú‰»‚ð‘Ò‚Á‚Ä‚¢‚Ü‚·... (5•b)"
+        echo "ã‚µãƒ¼ãƒ“ã‚¹å†èµ·å‹•ã‚³ãƒžãƒ³ãƒ‰ã‚’é€ä¿¡ã—ã¾ã—ãŸã€‚"
+        echo "ã‚¢ãƒ€ãƒ—ã‚¿ã®åˆæœŸåŒ–ã‚’å¾…ã£ã¦ã„ã¾ã™... (5ç§’)"
         sleep 5
-        
+
         echo
-        echo "--- hciconfig ‚ÌŽÀsŒ‹‰Ê ---"
+        echo "--- hciconfig ã®å®Ÿè¡Œçµæžœ ---"
         hciconfig
         echo "---------------------------"
         echo
 
         if hciconfig 2>/dev/null | grep -q "UP RUNNING"; then
-            echo -e "${GREEN}[¬Œ÷] BluetoothƒAƒ_ƒvƒ^‚ª—LŒø‚É‚È‚è‚Ü‚µ‚½I${NC}"
+            echo -e "${GREEN}[æˆåŠŸ] Bluetoothã‚¢ãƒ€ãƒ—ã‚¿ãŒæœ‰åŠ¹ã«ãªã‚Šã¾ã—ãŸï¼${NC}"
         else
-            echo -e "${RED}[Ž¸”s] BluetoothƒAƒ_ƒvƒ^‚ð—LŒø‚É‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B${NC}"
-            echo "Žè“®‚Å 'sudo hciconfig hci0 up' ‚È‚Ç‚ðŽŽ‚µ‚Ä‚­‚¾‚³‚¢B"
+            echo -e "${RED}[å¤±æ•—] Bluetoothã‚¢ãƒ€ãƒ—ã‚¿ã‚’æœ‰åŠ¹ã«ã§ãã¾ã›ã‚“ã§ã—ãŸã€‚${NC}"
+            echo "æ‰‹å‹•ã§ 'sudo hciconfig hci0 up' ãªã©ã‚’è©¦ã—ã¦ãã ã•ã„ã€‚"
         fi
     else
-        echo -e "${RED}[ƒGƒ‰[] BluetoothƒT[ƒrƒX‚ÌÄ‹N“®‚ÉŽ¸”s‚µ‚Ü‚µ‚½B${NC}"
+        echo -e "${RED}[ã‚¨ãƒ©ãƒ¼] Bluetoothã‚µãƒ¼ãƒ“ã‚¹ã®å†èµ·å‹•ã«å¤±æ•—ã—ã¾ã—ãŸã€‚${NC}"
     fi
     echo
-    read -p "EnterƒL[‚ð‰Ÿ‚µ‚Äƒƒjƒ…[‚É–ß‚è‚Ü‚·..."
+    read -p "Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«æˆ»ã‚Šã¾ã™..."
 }
 
-# ŠÂ‹«ƒ`ƒFƒbƒN
+# ç’°å¢ƒãƒã‚§ãƒƒã‚¯
 run_test() {
     clear
     echo "========================================"
-    echo "  ŠÂ‹«ƒ`ƒFƒbƒN"
+    echo "  ç’°å¢ƒãƒã‚§ãƒƒã‚¯"
     echo "========================================"
     echo
 
-    # 1. Python‰¼‘zŠÂ‹«
-    echo -n "[1/4] Python‰¼‘zŠÂ‹«... "
+    # 1. Pythonä»®æƒ³ç’°å¢ƒ
+    echo -n "[1/4] Pythonä»®æƒ³ç’°å¢ƒ... "
     if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
-        echo -e "${RED}[NG] .venv‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ${NC}"
+        echo -e "${RED}[NG] .venvãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“${NC}"
     fi
 
     # 2. NXBT
-    echo -n "[2/4] NXBTƒ‰ƒCƒuƒ‰ƒŠ... "
+    echo -n "[2/4] NXBTãƒ©ã‚¤ãƒ–ãƒ©ãƒª... "
     if [ -f "$PROJECT_DIR/.venv/bin/pip" ] && "$PROJECT_DIR/.venv/bin/pip" list 2>/dev/null | grep -q "nxbt"; then
         echo -e "${GREEN}[OK]${NC}"
     else
-        echo -e "${RED}[NG] nxbt‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ${NC}"
+        echo -e "${RED}[NG] nxbtãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ã¾ã›ã‚“${NC}"
     fi
 
-    # 3. ƒ}ƒNƒƒtƒ@ƒCƒ‹
-    echo -n "[3/4] ƒ}ƒNƒƒtƒ@ƒCƒ‹... "
+    # 3. ãƒžã‚¯ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«
+    echo -n "[3/4] ãƒžã‚¯ãƒ­ãƒ•ã‚¡ã‚¤ãƒ«... "
     if [ -f "$PROJECT_DIR/$MACRO_SCRIPT" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
-        echo -e "${RED}[NG] $MACRO_SCRIPT ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ${NC}"
+        echo -e "${RED}[NG] $MACRO_SCRIPT ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“${NC}"
     fi
 
-    # 4. BluetoothƒT[ƒrƒX
-    echo -n "[4/4] BluetoothƒT[ƒrƒX... "
+    # 4. Bluetoothã‚µãƒ¼ãƒ“ã‚¹
+    echo -n "[4/4] Bluetoothã‚µãƒ¼ãƒ“ã‚¹... "
     if systemctl is-active --quiet bluetooth; then
-        echo -e "${GREEN}[OK] ŽÀs’†${NC}"
+        echo -e "${GREEN}[OK] å®Ÿè¡Œä¸­${NC}"
     else
-        echo -e "${RED}[NG] ’âŽ~’†${NC}"
+        echo -e "${RED}[NG] åœæ­¢ä¸­${NC}"
     fi
 
     echo
-    echo "ƒ`ƒFƒbƒNŠ®—¹"
-    read -p "EnterƒL[‚ð‰Ÿ‚µ‚Äƒƒjƒ…[‚É–ß‚è‚Ü‚·..."
+    echo "ãƒã‚§ãƒƒã‚¯å®Œäº†"
+    read -p "Enterã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«æˆ»ã‚Šã¾ã™..."
 }
 
 
-# --- ƒƒCƒ“ƒ‹[ƒv ---
+# --- ãƒ¡ã‚¤ãƒ³ãƒ«ãƒ¼ãƒ— ---
 while true; do
     clear
     display_status
-    read -p "‘I‘ð (0-5): " choice
+    read -p "é¸æŠž (0-5): " choice
 
     case $choice in
         1) start_macro ;;
@@ -186,11 +186,11 @@ while true; do
         5) continue ;;
         0) break ;;
         *)
-            echo -e "${RED}–³Œø‚È‘I‘ð‚Å‚·BÄ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B${NC}"
+            echo -e "${RED}ç„¡åŠ¹ãªé¸æŠžã§ã™ã€‚å†å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚${NC}"
             sleep 2
             ;;
     esac
 done
 
 clear
-echo "I—¹‚µ‚Ü‚·B"
+echo "çµ‚äº†ã—ã¾ã™ã€‚"
