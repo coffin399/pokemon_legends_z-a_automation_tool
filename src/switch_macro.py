@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Nintendo Switch 自動マクロツール
-ZLを2秒間押しながらAボタンを押すスクリプト
-ENTERキーでマクロの開始/停止、Rキーで再接続
+ZLを押しながら0.2秒後にA、0.5秒後に全部離す
+NXBTのマクロ機能を使用してラグを最小化
 """
 
 import time
@@ -43,7 +43,8 @@ class SwitchMacro:
             # 接続の安定化のため少し待機
             time.sleep(6)
 
-            print("✅ 接続成功！ PROコントローラーとして認識されました。その後にキャラクターを操作するコントローラーを接続してください。")
+            print(
+                "✅ 接続成功！ PROコントローラーとして認識されました。その後にキャラクターを操作するコントローラーを接続してください。")
             self.is_connected = True
             return True
 
@@ -72,9 +73,33 @@ class SwitchMacro:
         # 再接続
         return self.connect()
 
-    def wait(self, duration):
-        """指定時間待機"""
-        time.sleep(duration)
+    def execute_macro(self):
+        """
+        マクロを実行
+        ZL押す → 0.2秒後A追加 → 0.5秒後全部離す
+        """
+        try:
+            # マクロ定義：文字列形式
+            # 形式: "ボタン 時間" または "時間" (待機のみ)
+            macro_sequence = (
+                "ZL 0.2s\n"  # ZLを押して0.2秒キープ
+                "ZL+A 0.5s\n"  # ZL+Aを押して0.5秒キープ
+                "0.1s"  # 全ボタン離して0.1秒待機
+            )
+
+            # マクロを送信（block=Trueで完了まで待機）
+            self.nxbt.macro(
+                self.controller_index,
+                macro_sequence,
+                block=True
+            )
+
+            return True
+
+        except Exception as e:
+            print(f"❌ マクロ実行エラー: {e}")
+            self.is_connected = False
+            return False
 
     def disconnect(self):
         """Switchから切断"""
@@ -128,7 +153,7 @@ def check_input(macro_obj):
 
 def zl_a_loop():
     """
-    メインマクロ: ZLを2秒間押しながらAを押す動作をループ
+    メインマクロ: マクロ機能を使ってZL+A操作をループ
     ENTERキーで開始/停止、Rキーで再接続
     """
     macro = SwitchMacro()
@@ -141,7 +166,8 @@ def zl_a_loop():
     print("\n" + "=" * 50)
     print("🎮 マクロツール起動完了！")
     print("=" * 50)
-    print("\n動作: ZL押す → 0.5秒後A追加 → 0.5秒後全部離す（ループ）")
+    print("\n動作: ZL押す → 0.2秒後A追加 → 0.5秒後全部離す（ループ）")
+    print("※ マクロ機能使用でラグを最小化")
 
     # キー入力監視スレッドを開始
     input_thread = threading.Thread(target=check_input, args=(macro,), daemon=True)
@@ -160,33 +186,12 @@ def zl_a_loop():
                 loop_count += 1
                 print(f"🔄 ループ {loop_count}回目...")
 
-                try:
-                    # 1. ZLを押す
-                    print("   ▶ ZLボタン押下")
-                    macro.nxbt.press_buttons(macro.controller_index, ["ZL"])
+                # マクロを実行
+                success = macro.execute_macro()
 
-                    # 2. 0.5秒待機（ZL押しっぱなし）
-                    macro.wait(0.5)
-
-                    # 3. ZLを押したままAを追加で押す
-                    print("   ▶ ZL+A 両方押す")
-                    macro.nxbt.press_buttons(macro.controller_index, ["ZL", "A"])
-
-                    # 4. 0.5秒待機（ZL+A押しっぱなし）
-                    macro.wait(0.5)
-
-                    # 5. 全てのボタンを離す
-                    print("   ▶ 全ボタンを離す")
-                    macro.nxbt.press_buttons(macro.controller_index, [])
-
-                    # 6. 次のループまで少し待機
-                    macro.wait(0.1)
-
+                if success:
                     print(f"   ✓ 完了 (合計: {loop_count}回)\n")
-
-                except Exception as e:
-                    print(f"❌ ボタン操作エラー: {e}")
-                    macro.is_connected = False
+                else:
                     print("\n⚠️  接続が切れました。Rキーで再接続してください")
                     macro.is_running = False
             else:
@@ -214,7 +219,7 @@ if __name__ == "__main__":
 ║                                                      ║
 ║     🎮 Nintendo Switch 自動マクロツール 🎮              ║
 ║                                                       ║
-║  ZL+A 自動連打プログラム                                 ║
+║  ZL+A 自動連打プログラム (マクロ機能版)                    ║
 ║  制御: ENTER（開始/停止）/ R（再接続）                    ║
 ║  終了: CTRL+C                                         ║
 ║                                                      ║
