@@ -2,6 +2,10 @@
 chcp 932 >nul
 setlocal enabledelayedexpansion
 
+:: --- 設定 ---
+set WSL_DISTRO_NAME=Ubuntu-22.04
+set "config_file=%~dp0.busid_config"
+
 :menu
 cls
 echo.
@@ -11,7 +15,7 @@ echo ========================================
 echo.
 
 :: マクロ状態確認
-wsl -d Ubuntu-22.04 -e bash -c "pgrep -f switch_macro.py > /dev/null" >nul 2>&1
+wsl -d %WSL_DISTRO_NAME% -e bash -c "pgrep -f switch_macro.py > /dev/null" >nul 2>&1
 if %errorlevel% equ 0 (
     echo 状態: [実行中] マクロ実行中
 ) else (
@@ -19,7 +23,7 @@ if %errorlevel% equ 0 (
 )
 
 :: Bluetooth状態確認
-wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
+wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
 if %errorlevel% equ 0 (
     echo Bluetooth: [接続済] 接続済み
 ) else (
@@ -64,7 +68,7 @@ echo.
 pause
 
 echo マクロを起動中...
-start "Switch Macro" wsl -d Ubuntu-22.04 -e bash -c "cd ~/switch-macro && sudo python3 src/switch_macro.py"
+start "Switch Macro" wsl -d %WSL_DISTRO_NAME% -e bash -c "cd ~/switch-macro && sudo python3 src/switch_macro.py"
 timeout /t 2 >nul
 echo.
 echo [完了] マクロを起動しました
@@ -80,7 +84,7 @@ echo ========================================
 echo   マクロ停止
 echo ========================================
 echo.
-wsl -d Ubuntu-22.04 -e bash -c "sudo pkill -f switch_macro.py"
+wsl -d %WSL_DISTRO_NAME% -e bash -c "sudo pkill -f switch_macro.py"
 echo [完了] マクロを停止しました
 echo.
 pause
@@ -94,16 +98,114 @@ echo   Bluetooth再接続
 echo ========================================
 echo.
 
-:: reconnect_bluetooth.batを呼び出し
-if exist "reconnect_bluetooth.bat" (
-    call reconnect_bluetooth.bat
-) else (
-    echo reconnect_bluetooth.bat が見つかりません
-    echo.
-    echo 手動で再接続してください:
-    echo   1. PowerShell（管理者）を開く
-    echo   2. usbipd attach --wsl --busid [BUSID]
+:: BUSID設定の読み込み
+set "saved_busid="
+if exist "%config_file%" (
+    set /p saved_busid=<"%config_file%"
 )
+
+if defined saved_busid (
+    echo 前回のBUSID: %saved_busid%
+    echo.
+    set /p use_saved="このBUSIDを使用しますか？ (Y/N): "
+
+    if /i "!use_saved!"=="Y" (
+        set "busid=!saved_busid!"
+        goto do_bind
+    )
+)
+
+echo.
+echo 利用可能なUSBデバイスを確認します...
+echo.
+usbipd list
+echo.
+echo 上記リストから、Bluetoothアダプタの「BUSID」を確認してください。
+echo 例: 2-3, 1-4 など
+echo.
+set /p busid="BUSIDを入力してください: "
+
+:: BUSIDを保存
+echo !busid!>"%config_file%"
+echo.
+echo [完了] BUSIDを保存しました
+echo.
+
+:do_bind
+echo ----------------------------------------
+echo [%busid%] Bluetoothアダプタをバインド中...
+echo.
+
+:: 既にShared状態かチェック
+usbipd bind --busid %busid% 2>&1 | findstr /C:"already shared" >nul
+if %errorlevel% equ 0 (
+    echo [情報] デバイスは既にShared状態です。
+    goto do_attach
+)
+
+:: バインド実行
+usbipd bind --busid %busid% >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [警告] バインドに失敗しました。強制バインドを試します...
+    usbipd bind --busid %busid% --force >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo [失敗] 強制バインドも失敗しました。
+        echo.
+        echo トラブルシューティング:
+        echo 1. BUSIDが正しいか確認してください
+        echo 2. 管理者権限で実行していますか？
+        echo.
+        pause
+        goto menu
+    )
+)
+
+echo バインド完了。
+
+:do_attach
+timeout /t 2 >nul
+echo WSLに接続中...
+echo.
+
+:: アタッチ実行
+usbipd attach --wsl --busid %busid%
+
+if %errorlevel% equ 0 (
+    echo.
+    echo [完了] 接続コマンドを実行しました
+    echo.
+
+    :: 初期化待機
+    echo Bluetoothアダプタの初期化中... (5秒)
+    timeout /t 5 >nul
+
+    :: 状態確認
+    echo Bluetooth状態を確認中...
+    echo.
+    wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig"
+    echo.
+
+    wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'"
+    if !errorlevel! equ 0 (
+        echo [成功] Bluetooth接続が有効になりました！
+    ) else (
+        echo [警告] Bluetooth接続を確認できませんでした
+        echo.
+        echo 手動で以下を試してください:
+        echo   wsl -d %WSL_DISTRO_NAME%
+        echo   sudo service dbus start
+        echo   sudo service bluetooth start
+        echo   hciconfig hci0 up
+    )
+) else (
+    echo.
+    echo [失敗] WSLへの接続に失敗しました
+    echo.
+    echo トラブルシューティング:
+    echo 1. WSL2が起動していますか？
+    echo 2. usbipd-winがインストールされていますか？
+)
+
 echo.
 pause
 goto menu
@@ -117,7 +219,7 @@ echo ========================================
 echo.
 
 echo [1/3] Bluetooth確認...
-wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
+wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] Bluetooth OK
 ) else (
@@ -125,7 +227,7 @@ if %errorlevel% equ 0 (
 )
 
 echo [2/3] NXBT確認...
-wsl -d Ubuntu-22.04 -e bash -c "which nxbt" >nul 2>&1
+wsl -d %WSL_DISTRO_NAME% -e bash -c "which nxbt" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] NXBT OK
 ) else (
@@ -133,7 +235,7 @@ if %errorlevel% equ 0 (
 )
 
 echo [3/3] マクロファイル確認...
-wsl -d Ubuntu-22.04 -e bash -c "test -f ~/switch-macro/src/switch_macro.py" >nul 2>&1
+wsl -d %WSL_DISTRO_NAME% -e bash -c "test -f ~/switch-macro/src/switch_macro.py" >nul 2>&1
 if %errorlevel% equ 0 (
     echo   [OK] マクロファイル OK
 ) else (
