@@ -204,16 +204,24 @@ def zl_a_loop():
                 loop_count += 1
                 print(f"🔄 ループ {loop_count}回目...")
 
-                # 1. ZLを押す
-                print("   ▶ ZLボタン押下")
-                macro.press_button("ZL", 0.5)  # ZLを0.5秒押す
+                # 1. ZLを押し続ける
+                print("   ▶ ZLボタン長押し開始")
+                macro.nxbt.press_buttons(macro.controller_index, ["ZL"])
 
-                # 2. ZLとAを同時に押す
-                print("   ▶ ZL+A同時押し")
-                macro.press_buttons(["ZL", "A"], 0.1)  # ZL+Aを0.1秒押す
-
-                # 3. 少し待機
+                # 2. 0.5秒待機（ZL押しっぱなし）
                 macro.wait(0.5)
+
+                # 3. ZLを押したままAを追加で押す
+                print("   ▶ ZL長押し中にAを押す")
+                macro.nxbt.press_buttons(macro.controller_index, ["ZL", "A"])
+                macro.wait(0.1)  # Aを0.1秒押す
+
+                # 4. 全てのボタンを離す
+                print("   ▶ 全ボタンを離す")
+                macro.nxbt.press_buttons(macro.controller_index, [])
+
+                # 5. 次のループまで少し待機
+                macro.wait(0.3)
 
                 print(f"   ✓ 完了 (合計: {loop_count}回)\n")
 
