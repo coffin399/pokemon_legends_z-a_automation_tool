@@ -180,7 +180,7 @@ def zl_a_loop():
                     macro.nxbt.press_buttons(macro.controller_index, [])
 
                     # 6. 次のループまで少し待機
-                    macro.wait(0.3)
+                    macro.wait(0.1)
 
                     print(f"   ✓ 完了 (合計: {loop_count}回)\n")
 
