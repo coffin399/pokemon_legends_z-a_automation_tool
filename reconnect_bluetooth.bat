@@ -84,6 +84,7 @@ if %errorlevel% equ 0 (
         echo   hciconfig
     )
 
+
 ) else (
     echo.
     echo [é∏îs] ê⁄ë±Ç…é∏îsÇµÇ‹ÇµÇΩ
