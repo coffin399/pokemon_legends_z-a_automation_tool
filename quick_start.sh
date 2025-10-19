@@ -180,7 +180,8 @@ echo
 
 # システムパッケージへのシンボリックリンクを作成する関数
 create_system_links() {
-    VENV_SITE_PACKAGES="$PROJECT_DIR/.venv/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages"
+    PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+    VENV_SITE_PACKAGES="$PROJECT_DIR/.venv/lib/python${PYTHON_VERSION}/site-packages"
 
     echo "システムパッケージへのリンクを作成しています..."
 
@@ -202,25 +203,43 @@ create_system_links() {
         echo "  ✓ dbus"
     fi
 
-    # _dbus_bindings と _dbus_glib_bindings
+    # _dbus_bindings と _dbus_glib_bindings (.so ファイル)
     for file in /usr/lib/python3/dist-packages/_dbus*.so; do
         if [ -f "$file" ]; then
             ln -sf "$file" "$VENV_SITE_PACKAGES/" 2>/dev/null || true
             echo "  ✓ $(basename $file)"
         fi
     done
+
+    # .egg-info も必要な場合がある
+    for dir in /usr/lib/python3/dist-packages/dbus*.egg-info; do
+        if [ -d "$dir" ]; then
+            ln -sf "$dir" "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+        fi
+    done
 }
 
-# システムパッケージへのリンクを作成
+# まずシステムパッケージへのリンクを作成
 create_system_links
 
 echo
 echo -e "${GREEN}✅ システムパッケージ版のPyGObjectとdbusを使用します${NC}"
 echo
 
-# nxbtのみpipでインストール
+# nxbtをインストール（--no-build-isolationと--no-depsを使用してdbus-pythonのビルドを回避）
 echo "nxbtをインストール中..."
-pip install nxbt
+
+# まず依存関係を確認
+echo "nxbtの依存関係を確認中..."
+
+# システムパッケージでカバーできない依存関係のみインストール
+pip install blessed pynput
+
+# nxbtを依存関係チェックなしでインストール（システムのdbus-pythonを使用）
+pip install --no-deps nxbt
+
+echo
+echo -e "${YELLOW}注意: nxbtはシステムのdbus-pythonを使用します${NC}"
 
 echo
 echo -e "${GREEN}✅ Pythonライブラリのインストールが完了しました${NC}"
