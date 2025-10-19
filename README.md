@@ -4,6 +4,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Ubuntu-orange)
 ![Language](https://img.shields.io/badge/Language-Python-blue.svg)
 ![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+
 ![動作プレビュー](https://i.imgur.com/Jo7cohU.gif)
 **超簡単！** スクリプト一つでNintendo Switchを自動操作できるツールです。
 
