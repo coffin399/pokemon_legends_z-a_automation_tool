@@ -56,12 +56,12 @@ usbipd attach --wsl --busid %busid%
 
 if %errorlevel% equ 0 (
     echo.
-    echo ? 接続成功！
+    echo 接続成功！
     echo.
 
     :: WSL内で確認
     echo Bluetooth状態を確認中...
-    wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING' && echo '? Bluetooth接続OK' || echo '??  Bluetooth接続を確認できませんでした'"
+    wsl -d Ubuntu-22.04 -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING' && echo 'Bluetooth接続OK' || echo 'Bluetooth接続を確認できませんでした'"
 
 ) else (
     echo.
