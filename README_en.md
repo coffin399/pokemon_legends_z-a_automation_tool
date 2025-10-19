@@ -5,7 +5,7 @@
 ![Language](https://img.shields.io/badge/Language-Python-blue.svg)
 ![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
-![preview](https://i.imgur.com/Jo7cohU.gif)
+![preview](preview.gif)
 **Super Easy!** This tool lets you automate your Nintendo Switch with a single script.
 
 It continuously and automatically presses the **A** button while holding down the **ZL** button.

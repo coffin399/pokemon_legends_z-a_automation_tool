@@ -5,7 +5,7 @@
 ![Language](https://img.shields.io/badge/Language-Python-blue.svg)
 ![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
 
-![動作プレビュー](https://i.imgur.com/Jo7cohU.gif)
+![動作プレビュー](preview.gif)
 **超簡単！** スクリプト一つでNintendo Switchを自動操作できるツールです。
 
 ZLボタンを押しながらAボタンを自動で連打し続けます。
