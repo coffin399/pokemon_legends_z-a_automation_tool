@@ -208,13 +208,13 @@ def zl_a_loop():
                 print("   ▶ ZLボタン長押し開始")
                 macro.nxbt.press_buttons(macro.controller_index, ["ZL"])
 
-                # 2. 0.5秒待機（ZL押しっぱなし）
-                macro.wait(0.5)
+                # 2. 1.0秒待機（ZL押しっぱなし）
+                macro.wait(1.0)
 
                 # 3. ZLを押したままAを追加で押す
                 print("   ▶ ZL長押し中にAを押す")
                 macro.nxbt.press_buttons(macro.controller_index, ["ZL", "A"])
-                macro.wait(0.1)  # Aを0.1秒押す
+                macro.wait(0.5)  # Aを0.5秒押す
 
                 # 4. 全てのボタンを離す
                 print("   ▶ 全ボタンを離す")
