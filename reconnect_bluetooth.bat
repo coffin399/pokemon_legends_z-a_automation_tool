@@ -54,18 +54,43 @@ echo [%busid%] Bluetoothアダプタをバインド中...
 echo.
 
 :: バインド処理
-usbipd bind --busid %busid% >nul 2>&1
-rem ★改善点1: bindコマンドの成否をチェック
-if %errorlevel% neq 0 (
-    echo [失敗] デバイスのバインドに失敗しました。
-    echo ・BUSIDが間違っていませんか？
-    echo ・このスクリプトを「管理者として実行」していますか？
-    goto end
+usbipd bind --busid %busid% 2>&1 | findstr /C:"already shared" >nul
+if %errorlevel% equ 0 (
+    echo [情報] デバイスは既にShared状態です。
+    goto do_attach
 )
 
-echo バインド完了。WSLに接続します...
+usbipd bind --busid %busid% >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [失敗] デバイスのバインドに失敗しました。
+    echo.
+    echo トラブルシューティング:
+    echo ・BUSIDが間違っていませんか？
+    echo ・このスクリプトを「管理者として実行」していますか？
+    echo ・Bluetoothデバイスが使用中ではありませんか？
+    echo.
+    echo 強制バインドを試しますか？ (Y/N)
+    set /p force_bind=
+    if /i "!force_bind!"=="Y" (
+        echo 強制バインド中...
+        usbipd bind --busid %busid% --force
+        if !errorlevel! neq 0 (
+            echo [失敗] 強制バインドも失敗しました。
+            goto end
+        )
+    ) else (
+        goto end
+    )
+)
+
+echo バインド完了。
+
+:do_attach
 rem タイミング問題を避けるための短い待機
 timeout /t 2 >nul
+
+echo WSLに接続します...
+echo.
 
 :: アタッチ処理
 usbipd attach --wsl --busid %busid%
@@ -75,7 +100,6 @@ if %errorlevel% equ 0 (
     echo [完了] 接続コマンドの実行が完了しました。
     echo.
 
-    rem ★改善点3: なぜ待つのかコメントを追加
     rem WSLがデバイスを認識し、Bluetoothサービスが初期化するのを待つ
     echo Bluetoothアダプタの初期化を待っています... (5秒)
     timeout /t 5 >nul
@@ -88,21 +112,22 @@ if %errorlevel% equ 0 (
     echo ---------------------------
     echo.
 
-    rem ★改善点2: hciconfigのどこを見るか説明を追加
     echo 上記結果に「UP RUNNING」と表示されていれば正常です。
     echo.
 
     wsl -d %WSL_DISTRO_NAME% -e bash -c "hciconfig 2>/dev/null | grep -q 'UP RUNNING'"
     if !errorlevel! equ 0 (
         echo [成功] Bluetooth接続が有効になりました！
-        echo これでWSL内の 'bluetoothctl' などが使用できます。
+        echo これでWSL内の 'nxbt' が使用できます。
     ) else (
         echo [警告] Bluetooth接続を自動で確認できませんでした。
         echo.
         echo 以下のコマンドをWSL内で手動で実行して、状態を確認してください:
         echo   wsl -d %WSL_DISTRO_NAME%
-        echo   sudo service bluetooth restart
+        echo   sudo service dbus start
+        echo   sudo service bluetooth start
         echo   hciconfig
+        echo   hciconfig hci0 up
     )
 
 ) else (
@@ -113,6 +138,8 @@ if %errorlevel% equ 0 (
     echo 1. BUSIDが正しいか確認してください。
     echo 2. PowerShell (またはコマンドプロンプト) を「管理者として実行」していますか？
     echo 3. 'usbipd-win' が正しくインストールされていますか？
+    echo 4. WSL2が起動していますか？ (wsl -l -v で確認)
+    echo 5. デバイスが他のプロセスで使用中ではありませんか？
 )
 
 :end
