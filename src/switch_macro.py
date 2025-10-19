@@ -141,7 +141,7 @@ def zl_a_loop():
     print("\n" + "=" * 50)
     print("🎮 マクロツール起動完了！")
     print("=" * 50)
-    print("\n動作: ZL押す → 1秒後A追加 → 1秒後全部離す（ループ）")
+    print("\n動作: ZL押す → 0.5秒後A追加 → 1秒後全部離す（ループ）")
 
     # キー入力監視スレッドを開始
     input_thread = threading.Thread(target=check_input, args=(macro,), daemon=True)
@@ -165,8 +165,8 @@ def zl_a_loop():
                     print("   ▶ ZLボタン押下")
                     macro.nxbt.press_buttons(macro.controller_index, ["ZL"])
 
-                    # 2. 1秒待機（ZL押しっぱなし）
-                    macro.wait(1.0)
+                    # 2. 0.5秒待機（ZL押しっぱなし）
+                    macro.wait(0.5)
 
                     # 3. ZLを押したままAを追加で押す
                     print("   ▶ ZL+A 両方押す")
@@ -180,7 +180,7 @@ def zl_a_loop():
                     macro.nxbt.press_buttons(macro.controller_index, [])
 
                     # 6. 次のループまで少し待機
-                    macro.wait(0.3)
+                    macro.wait(0.1)
 
                     print(f"   ✓ 完了 (合計: {loop_count}回)\n")
 
