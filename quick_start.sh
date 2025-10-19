@@ -143,26 +143,55 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 
 # 仮想環境の作成
 if [ -d ".venv" ]; then
-    echo -e "${YELLOW}既存の仮想環境が見つかりました${NC}"
+    echo -e "${YELLOW}既存の仮想環境が見つかりました: .venv${NC}"
     read -p "削除して再作成しますか？ (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "既存の仮想環境を削除中..."
         rm -rf .venv
-        echo "既存の仮想環境を削除しました"
+        echo -e "${GREEN}削除完了${NC}"
+    else
+        echo "既存の仮想環境を使用します"
     fi
 fi
 
 if [ ! -d ".venv" ]; then
     echo "Python仮想環境を作成しています..."
     python3 -m venv .venv
-    echo -e "${GREEN}✅ 仮想環境を作成しました${NC}"
+
+    # 作成確認
+    if [ -d ".venv" ]; then
+        echo -e "${GREEN}✅ 仮想環境を作成しました: $(pwd)/.venv${NC}"
+        ls -la .venv/ | head -5
+    else
+        echo -e "${RED}❌ 仮想環境の作成に失敗しました${NC}"
+        exit 1
+    fi
 else
-    echo "既存の仮想環境を使用します"
+    echo -e "${GREEN}既存の仮想環境を使用します: $(pwd)/.venv${NC}"
 fi
+
+echo
 
 # 仮想環境を有効化
 echo "仮想環境を有効化しています..."
+if [ ! -f ".venv/bin/activate" ]; then
+    echo -e "${RED}❌ 仮想環境のactivateスクリプトが見つかりません${NC}"
+    echo "ディレクトリ構造:"
+    ls -la .venv/
+    exit 1
+fi
+
 source .venv/bin/activate
+
+# 有効化確認
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo -e "${RED}❌ 仮想環境の有効化に失敗しました${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ 仮想環境を有効化しました: $VIRTUAL_ENV${NC}"
+echo
 
 # pipのアップグレード
 echo "pipをアップグレードしています..."
@@ -317,6 +346,320 @@ deactivate
 EOF
 
 chmod +x "$PROJECT_DIR/run_macro.sh"
+
+# コントロールパネルの作成
+cat > "$PROJECT_DIR/control_panel.sh" << 'EOF'
+#!/bin/bash
+
+# --- 色付け用の変数 ---
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# --- 設定 ---
+PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+MACRO_DIR="$PROJECT_DIR/macros"
+
+# --- 関数定義 ---
+
+# 状態表示
+display_status() {
+    echo "========================================"
+    echo "  Nintendo Switch マクロ コントロールパネル"
+    echo "========================================"
+    echo
+
+    # 実行中のマクロを確認
+    RUNNING_MACROS=$(pgrep -fa "python.*macros/.*\.py" | wc -l)
+    if [ "$RUNNING_MACROS" -gt 0 ]; then
+        echo -e "状態      : ${GREEN}[実行中]${NC} マクロ実行中 (${RUNNING_MACROS}個)"
+        echo "実行中のマクロ:"
+        pgrep -fa "python.*macros/.*\.py" | sed 's/^/  - /'
+    else
+        echo -e "状態      : ${YELLOW}[停止中]${NC} マクロ停止中"
+    fi
+
+    echo
+
+    # Bluetooth状態確認
+    if systemctl is-active --quiet bluetooth; then
+        if command -v hciconfig &> /dev/null && hciconfig 2>/dev/null | grep -q "UP RUNNING"; then
+            echo -e "Bluetooth : ${GREEN}[接続済]${NC} アダプタ有効"
+        else
+            echo -e "Bluetooth : ${YELLOW}[動作中]${NC} サービス起動中"
+        fi
+    else
+        echo -e "Bluetooth : ${RED}[未接続]${NC} サービス停止中"
+    fi
+
+    # 仮想環境の確認
+    if [ -d "$PROJECT_DIR/.venv" ]; then
+        echo -e "仮想環境  : ${GREEN}[OK]${NC} .venv 存在"
+    else
+        echo -e "仮想環境  : ${RED}[NG]${NC} .venv が見つかりません"
+    fi
+
+    echo
+    echo "========================================"
+    echo
+    echo "[1] マクロを選択して実行"
+    echo "[2] 実行中のマクロを停止"
+    echo "[3] Bluetooth再起動"
+    echo "[4] 環境チェック"
+    echo "[5] 状態を更新"
+    echo "[0] 終了"
+    echo
+    echo "========================================"
+}
+
+# マクロ選択と実行
+start_macro() {
+    clear
+    echo "========================================"
+    echo "  マクロ選択"
+    echo "========================================"
+    echo
+
+    # macrosディレクトリのPythonファイルを検索
+    if [ ! -d "$MACRO_DIR" ]; then
+        echo -e "${RED}[エラー] macrosディレクトリが見つかりません${NC}"
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    # .pyファイルを配列に格納
+    mapfile -t MACROS < <(find "$MACRO_DIR" -maxdepth 1 -name "*.py" -type f | sort)
+
+    if [ ${#MACROS[@]} -eq 0 ]; then
+        echo -e "${YELLOW}[警告] 実行可能なマクロが見つかりません${NC}"
+        echo "macros/ ディレクトリに .py ファイルを配置してください"
+        echo
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    echo "利用可能なマクロ:"
+    echo
+    for i in "${!MACROS[@]}"; do
+        MACRO_NAME=$(basename "${MACROS[$i]}")
+        echo "  [$((i+1))] $MACRO_NAME"
+    done
+    echo "  [0] キャンセル"
+    echo
+    read -p "実行するマクロを選択 (0-${#MACROS[@]}): " choice
+
+    if [ "$choice" = "0" ]; then
+        return
+    fi
+
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt ${#MACROS[@]} ]; then
+        echo -e "${RED}[エラー] 無効な選択です${NC}"
+        sleep 2
+        return
+    fi
+
+    SELECTED_MACRO="${MACROS[$((choice-1))]}"
+    echo
+    echo -e "選択されたマクロ: ${GREEN}$(basename "$SELECTED_MACRO")${NC}"
+    echo
+    echo "Switchで「コントローラー」→「持ちかた/順番を変える」を開いてください"
+    read -p "準備ができたらEnterキーを押してください..."
+
+    echo "マクロを新しいウィンドウで起動中..."
+
+    # 仮想環境の確認
+    if [ ! -f "$PROJECT_DIR/.venv/bin/activate" ]; then
+        echo -e "${RED}[エラー] 仮想環境が見つかりません${NC}"
+        echo "先に setup.sh を実行してください"
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    # 新しいターミナルで実行
+    if command -v gnome-terminal &> /dev/null; then
+        gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && python3 '$SELECTED_MACRO'; echo; echo 'マクロが終了しました。このウィンドウを閉じてください。'; read"
+    elif command -v xterm &> /dev/null; then
+        xterm -hold -e "cd '$PROJECT_DIR' && source .venv/bin/activate && python3 '$SELECTED_MACRO'" &
+    else
+        echo -e "${YELLOW}[警告] ターミナルエミュレータが見つかりません${NC}"
+        echo "このターミナルで実行します..."
+        cd "$PROJECT_DIR"
+        source .venv/bin/activate
+        python3 "$SELECTED_MACRO"
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    sleep 2
+    echo
+    echo -e "${GREEN}[完了] マクロを起動しました${NC}"
+    echo "   新しいターミナルウィンドウで実行中です"
+    echo
+    read -p "Enterキーを押してメニューに戻ります..."
+}
+
+# マクロ停止
+stop_macro() {
+    clear
+    echo "========================================"
+    echo "  マクロ停止"
+    echo "========================================"
+    echo
+
+    # 実行中のマクロを検索
+    MACRO_PIDS=$(pgrep -f "python.*macros/.*\.py")
+
+    if [ -z "$MACRO_PIDS" ]; then
+        echo -e "${YELLOW}[情報] 実行中のマクロはありません${NC}"
+    else
+        echo "実行中のマクロ:"
+        pgrep -fa "python.*macros/.*\.py"
+        echo
+        read -p "これらのマクロを停止しますか？ (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            pkill -f "python.*macros/.*\.py"
+            echo -e "${GREEN}[完了] マクロを停止しました${NC}"
+        else
+            echo "キャンセルしました"
+        fi
+    fi
+    echo
+    read -p "Enterキーを押してメニューに戻ります..."
+}
+
+# Bluetooth再起動
+reconnect_bt() {
+    clear
+    echo "========================================"
+    echo "  Bluetooth再起動"
+    echo "========================================"
+    echo
+    echo "Bluetoothサービスを再起動します..."
+    sudo systemctl restart bluetooth
+
+    if [ $? -eq 0 ]; then
+        echo "サービス再起動コマンドを送信しました"
+        echo "アダプタの初期化を待っています... (3秒)"
+        sleep 3
+
+        if command -v hciconfig &> /dev/null; then
+            echo
+            echo "--- Bluetoothアダプタ情報 ---"
+            hciconfig
+            echo "----------------------------"
+            echo
+        fi
+
+        if systemctl is-active --quiet bluetooth; then
+            echo -e "${GREEN}[成功] Bluetoothサービスが起動しました${NC}"
+        else
+            echo -e "${RED}[失敗] Bluetoothサービスの起動に失敗しました${NC}"
+        fi
+    else
+        echo -e "${RED}[エラー] Bluetoothサービスの再起動に失敗しました${NC}"
+    fi
+    echo
+    read -p "Enterキーを押してメニューに戻ります..."
+}
+
+# 環境チェック
+run_test() {
+    clear
+    echo "========================================"
+    echo "  環境チェック"
+    echo "========================================"
+    echo
+
+    # 1. プロジェクトディレクトリ
+    echo -n "[1/6] プロジェクトディレクトリ... "
+    if [ -d "$PROJECT_DIR" ]; then
+        echo -e "${GREEN}[OK]${NC} $PROJECT_DIR"
+    else
+        echo -e "${RED}[NG]${NC}"
+    fi
+
+    # 2. Python仮想環境
+    echo -n "[2/6] Python仮想環境... "
+    if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
+        echo -e "${GREEN}[OK]${NC}"
+    else
+        echo -e "${RED}[NG] .venvが見つかりません${NC}"
+    fi
+
+    # 3. NXBT
+    echo -n "[3/6] NXBTライブラリ... "
+    if [ -f "$PROJECT_DIR/.venv/bin/python3" ]; then
+        if "$PROJECT_DIR/.venv/bin/python3" -c "import nxbt" 2>/dev/null; then
+            echo -e "${GREEN}[OK]${NC}"
+        else
+            echo -e "${RED}[NG] nxbtがインポートできません${NC}"
+        fi
+    else
+        echo -e "${RED}[NG] Python実行ファイルが見つかりません${NC}"
+    fi
+
+    # 4. マクロディレクトリ
+    echo -n "[4/6] マクロディレクトリ... "
+    if [ -d "$MACRO_DIR" ]; then
+        MACRO_COUNT=$(find "$MACRO_DIR" -maxdepth 1 -name "*.py" -type f | wc -l)
+        echo -e "${GREEN}[OK]${NC} $MACRO_COUNT 個のマクロ"
+    else
+        echo -e "${RED}[NG] macros/が見つかりません${NC}"
+    fi
+
+    # 5. Bluetoothサービス
+    echo -n "[5/6] Bluetoothサービス... "
+    if systemctl is-active --quiet bluetooth; then
+        echo -e "${GREEN}[OK] 実行中${NC}"
+    else
+        echo -e "${RED}[NG] 停止中${NC}"
+    fi
+
+    # 6. Bluetoothアダプタ
+    echo -n "[6/6] Bluetoothアダプタ... "
+    if command -v hciconfig &> /dev/null; then
+        if hciconfig 2>/dev/null | grep -q "UP RUNNING"; then
+            echo -e "${GREEN}[OK] 有効${NC}"
+        else
+            echo -e "${YELLOW}[警告] 無効${NC}"
+        fi
+    else
+        echo -e "${YELLOW}[?] hciconfigが利用できません${NC}"
+    fi
+
+    echo
+    echo "チェック完了"
+    read -p "Enterキーを押してメニューに戻ります..."
+}
+
+# --- メインループ ---
+while true; do
+    clear
+    display_status
+    read -p "選択 (0-5): " choice
+
+    case $choice in
+        1) start_macro ;;
+        2) stop_macro ;;
+        3) reconnect_bt ;;
+        4) run_test ;;
+        5) continue ;;
+        0) break ;;
+        *)
+            echo -e "${RED}無効な選択です。再入力してください${NC}"
+            sleep 2
+            ;;
+    esac
+done
+
+clear
+echo "終了します。"
+EOF
+
+chmod +x "$PROJECT_DIR/control_panel.sh"
 
 # LとRボタンマクロの作成
 cat > "$PROJECT_DIR/macros/press_lr.py" << 'EOF'
@@ -495,18 +838,35 @@ echo -e "${GREEN}============================================${NC}"
 echo -e "${GREEN}   🎉 セットアップが完了しました！ 🎉${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo
+echo -e "${BLUE}📂 作成されたファイル・ディレクトリ:${NC}"
+echo "  - .venv/             (Python仮想環境)"
+echo "  - macros/            (マクロスクリプト)"
+echo "  - src/               (自作モジュール)"
+echo "  - logs/              (ログファイル)"
+echo "  - run_macro.sh       (マクロ実行スクリプト)"
+echo "  - control_panel.sh   (コントロールパネル)"
+echo "  - README.md          (ドキュメント)"
+echo
+echo -e "${BLUE}📍 プロジェクトディレクトリ:${NC}"
+echo "  ${GREEN}$PROJECT_DIR${NC}"
+echo
+if [ -d ".venv" ]; then
+    echo -e "${GREEN}✅ 仮想環境: 作成済み${NC}"
+else
+    echo -e "${RED}❌ 仮想環境: 未作成${NC}"
+fi
+echo
 echo -e "${YELLOW}📋 次のステップ:${NC}"
 echo
 echo "1. Switch本体で以下の操作を行ってください:"
 echo "   「設定」→「コントローラーとセンサー」→「コントローラー」"
 echo "   →「持ちかた/順番を変える」画面を開く"
 echo
-echo "2. サンプルマクロを実行してみましょう:"
-echo -e "   ${GREEN}./run_macro.sh macros/press_lr.py${NC}"
+echo "2. コントロールパネルを起動:"
+echo -e "   ${GREEN}./control_panel.sh${NC}"
 echo
-echo "3. 独自のマクロを作成する場合:"
-echo "   macros/ ディレクトリにPythonスクリプトを作成してください"
-echo "   press_lr.py を参考にすると良いでしょう"
+echo "   または、直接マクロを実行:"
+echo -e "   ${GREEN}./run_macro.sh macros/press_lr.py${NC}"
 echo
 echo -e "${BLUE}📖 詳細はREADME.mdを参照してください${NC}"
 echo
