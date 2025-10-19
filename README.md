@@ -1,6 +1,6 @@
-# 🎮 ポケモンLEGENDS Z-A 金策ツール
+# 🎮 Pokemon Legends Z-A 自動金策ツール (Linux/Ubuntu版)
 
-**超簡単！** ボタン一つでNintendo Switchを自動操作できるツールです。
+**超簡単！** スクリプト一つでNintendo Switchを自動操作できるツールです。
 
 ZLボタンを押しながらAボタンを自動で連打し続けます。
 
@@ -21,13 +21,13 @@ ZLボタンを押しながらAボタンを自動で連打し続けます。
 ## 🛠️ 必要なもの
 
 ### ハードウェア
-- ✅ Windows 10 または Windows 11 のPC
+- ✅ **Ubuntu 24.04 LTS** がインストールされたPC (または他のDebian系Linux)
 - ✅ Bluetooth機能（内蔵またはUSBアダプタ）
 - ✅ Nintendo Switch本体
 
 ### その他
 - インターネット接続（初回セットアップ時のみ）
-- 30〜60分程度の時間（初回セットアップ時のみ）
+- 約10分程度の時間（初回セットアップ時のみ）
 
 ---
 
@@ -41,385 +41,114 @@ switch-macro/
 ├── 📄 README.md               ← このファイル（完全ガイド）
 ├── 📄 LICENSE                 ← MITライセンス
 │
-├── 🎮 control_panel.bat       ← ★ 【おすすめ】コントロールパネル
-├── 🚀 run_macro.bat           ← マクロ実行（直接起動）
-├── 📡 reconnect_bluetooth.bat ← Bluetooth再接続ヘルパー
+├── 🚀 quick_start.sh          ← ★【最初に行う】ワンクリック環境構築スクリプト
+├── 🎮 control_panel.sh        ← ★【これで操作】コントロールパネル
 │
-├── 📁 src/                    ← メインソースコード
-│   └── switch_macro.py        ← マクロ実行スクリプト
-│
-└── 📁 scripts/                ← セットアップ用スクリプト
-    └── setup_wsl.sh           ← WSL環境自動構築スクリプト
+└── 📁 src/                    ← メインソースコード
+    └── switch_macro.py        ← マクロ実行スクリプト
 ```
 
 ### 🎯 どのファイルを使う？
 
-| ファイル | 用途 | 使いやすさ |
-|---------|------|-----------|
-| `control_panel.bat` | **全機能を統合** - マクロ開始/停止、接続確認など | ⭐⭐⭐⭐⭐ |
-| `run_macro.bat` | マクロを直接起動（シンプル） | ⭐⭐⭐⭐ |
-| `reconnect_bluetooth.bat` | Bluetooth再接続のみ | ⭐⭐⭐ |
+| ファイル | 用途 |
+|---------|------|
+| `quick_start.sh` | **初回のみ** - 必要なものを全て自動インストールします。 |
+| `control_panel.sh` | **毎回使用** - マクロの開始/停止、接続確認など全てここから行います。 |
 
-**初めての方は `control_panel.bat` がおすすめです！**
-
----
-
-## 🚀 初回セットアップ（完全マニュアル）
-
-初めて使うときだけ必要な作業です。**手順通りに進めれば誰でもできます！**
-
-### ⏱️ 所要時間: 30〜60分
+**`quick_start.sh`で環境構築後、`control_panel.sh`を使うだけ！**
 
 ---
 
-### 📝 ステップ1: WSL2を有効化（10分）
+## 🚀 初回セットアップ（ワンクリック版）
 
-#### 1-1. PowerShellを開く
+初めて使うときだけ必要な作業です。**コマンドを3つ実行するだけ！**
 
-1. **Windowsキー** を押す
-2. 「**PowerShell**」と入力
-3. 表示された「Windows PowerShell」を **右クリック**
-4. **「管理者として実行」** を選択
-
-#### 1-2. WSLをインストール
-
-PowerShellに以下のコマンドをコピー＆ペーストして **Enter**:
-
-```powershell
-wsl --install
-```
-
-#### 1-3. 再起動
-
-インストールが完了したら:
-
-```powershell
-shutdown /r /t 0
-```
-
-を実行してPCを再起動します。
-
-```
-💡 または手動で再起動してもOKです
-```
+### ⏱️ 所要時間: 約10分
 
 ---
 
-### 📝 ステップ2: Ubuntuの初期設定（5分）
+### 📝 ステップ1: ターミナルを開く
 
-#### 2-1. Ubuntuの起動
+キーボードで `Ctrl + Alt + T` を押して、ターミナル（黒い画面）を開きます。
 
-1. PC再起動後、自動的に「Ubuntu」のウィンドウが開きます
-2. 開かない場合は:
-   - Windowsキー → 「**Ubuntu**」と入力 → Enter
+### 📝 ステップ2: スクリプトを実行
 
-#### 2-2. ユーザー名とパスワードを設定
-
-```
-Enter new UNIX username: switch
-New password: [好きなパスワード]
-Retype new password: [もう一度同じパスワード]
-```
-
-```
-⚠️ 重要
-- パスワードは入力しても画面に表示されません
-- でもちゃんと入力されているので安心してください
-- パスワードは忘れないようにメモしてください
-```
-
-#### 2-3. セットアップ完了
-
-「Installation successful!」と表示されたら、Ubuntuウィンドウは閉じてOKです。
-
----
-
-### 📝 ステップ3: NXBTのインストール（15分）
-
-#### 3-1. PowerShellを開く（管理者として）
-
-1. Windowsキー → 「**PowerShell**」
-2. **右クリック** → 「管理者として実行」
-
-#### 3-2. WSL2をデフォルトに設定
-
-```powershell
-wsl --set-default-version 2
-```
-
-#### 3-3. Ubuntuを起動
-
-```powershell
-wsl -d Ubuntu-22.04
-```
-
-Ubuntuの画面に切り替わります。
-
-#### 3-4. 必要なパッケージをインストール
-
-以下のコマンドを**1つずつ**コピー＆ペーストして実行:
+以下のコマンドを**1つずつ**コピー＆ペーストして **Enter** を押してください。
 
 ```bash
-# システムアップデート（2〜5分）
-sudo apt update && sudo apt upgrade -y
+# 1. ダウンロードしたフォルダに移動します
+# 例: cd ~/Downloads/switch-macro
+cd /path/to/your/switch-macro
+
+# 2. スクリプトに実行権限を与えます（初回のみ）
+chmod +x quick_start.sh
+
+# 3. セットアップスクリプトを実行します
+./quick_start.sh
 ```
 
-パスワードを聞かれたら、ステップ2で設定したパスワードを入力。
-
-```bash
-# 必要なパッケージをインストール（5〜10分）
-sudo apt install -y python3 python3-pip git bluez libbluetooth-dev libglib2.0-dev libdbus-1-dev libgirepository1.0-dev libcairo2-dev pkg-config
-```
-
-```bash
-# Pythonパッケージをインストール（2〜3分）
-pip3 install pydbus PyGObject
-```
-
-```bash
-# NXBTをインストール（1〜2分）
-pip3 install nxbt
-```
-
-```bash
-# 環境変数を設定
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
-source ~/.bashrc
-```
-
-#### 3-5. Bluetoothサービスを起動
-
-```bash
-sudo service dbus start
-sudo service bluetooth start
-```
-
-#### 3-6. インストール確認
-
-```bash
-nxbt --version
-```
-
-バージョン情報が表示されればOK！
-
-#### 3-7. Ubuntuを終了
-
-```bash
-exit
-```
-
-PowerShellに戻ります。
-
----
-
-### 📝 ステップ4: usbipd-winのインストール（5分）
-
-#### 4-1. usbipd-winをダウンロード
-
-1. 以下のリンクをブラウザで開く:
-   https://github.com/dorssel/usbipd-win/releases
-
-2. 最新版の **`.msi`** ファイルをクリックしてダウンロード
-   例: `usbipd-win_4.3.0.msi`
-　　または、コマンドプロンプトで`winget install usbipd`
-#### 4-2. インストール
-
-1. ダウンロードした `.msi` ファイルをダブルクリック
-2. 「次へ」を何回かクリック
-3. 「完了」をクリック
-
----
-
-### 📝 ステップ5: BluetoothアダプタをWSLに接続（5分）
-
-#### 5-1. PowerShellを開く（管理者として）
-
-既に開いている場合はそのまま使用してOK。
-
-#### 5-2. Bluetoothアダプタを確認
-
-```powershell
-usbipd list
-```
-
-以下のような表示が出ます:
-
-```
-BUSID  VID:PID    DEVICE
-1-1    046d:c52b  USB Input Device
-2-3    8087:0025  Intel(R) Wireless Bluetooth(R)  ← これ！
-3-2    0bda:0129  Realtek USB 2.0 Card Reader
-```
-
-**Bluetoothの行の「BUSID」をメモしてください！**
-（例: `2-3`）
-
-```
-💡 Bluetoothアダプタの見つけ方
-- "Bluetooth" という文字が含まれている行
-- "Intel Wireless" などのメーカー名がある行
-- 分からない場合は、各行を1つずつ試してみましょう
-```
-
-#### 5-3. Bluetoothアダプタをバインド
-
-```powershell
-usbipd bind --busid 2-3
-```
-
-**`2-3` の部分は、自分のBUSIDに置き換えてください！**
-
-#### 5-4. WSLにアタッチ
-
-```powershell
-usbipd attach --wsl --busid 2-3
-```
-
-**`2-3` の部分は、自分のBUSIDに置き換えてください！**
-
-#### 5-5. 接続確認
-
-```powershell
-wsl -d Ubuntu-22.04
-hciconfig
-```
-
-以下のように表示されればOK:
-
-```
-hci0:   Type: Primary  Bus: USB
-        BD Address: XX:XX:XX:XX:XX:XX  ACL MTU: 1021:8  SCO MTU: 64:1
-```
-
-「hci0」が表示されていれば成功です！
-
-```bash
-exit
-```
-
-でPowerShellに戻ります。
-
----
-
-### 📝 ステップ6: マクロファイルをWSLにコピー（3分）
-
-#### 6-1. マクロファイルの場所を確認
-
-ダウンロードした `pokemon_legends_z-a_money_farm_tool` フォルダの場所をメモしてください。
-
-例: `C:\Users\YourName\Downloads\pokemon_legends_z-a_money_farm_tool-master`
-
-#### 6-2. PowerShellでWSLのホームに移動
-
-```powershell
-wsl -d Ubuntu-22.04
-cd ~
-```
-
-#### 6-3. マクロフォルダを作成
-
-```bash
-mkdir -p switch-macro/src
-```
-
-#### 6-4. Windowsからファイルをコピー
-
-PowerShellで以下を実行（パスは自分の環境に合わせて変更）:
-
-```powershell
-# PowerShellに戻る
-exit
-
-# Windowsのファイルをコピー
-wsl -d Ubuntu-22.04 -e bash -c "cp /mnt/c/Users/YourName/Downloads/switch-macro/src/switch_macro.py ~/switch-macro/src/"
-```
-
-または、手動でコピー:
-
-1. エクスプローラーで `\\wsl$\Ubuntu-22.04\home\switch` を開く
-2. `switch-macro/src/` フォルダを作成
-3. `switch_macro.py` をコピー
-
-#### 6-5. 実行権限を付与
-
-```powershell
-wsl -d Ubuntu-22.04
-cd ~/switch-macro
-chmod +x src/switch_macro.py
-```
+実行中にパスワードを聞かれたら、お使いのPCのログインパスワードを入力してください。
+（パスワードは入力しても画面に表示されませんが、入力されています）
 
 ---
 
 ### 🎉 セットアップ完了！
 
-お疲れ様でした！これで準備は完了です。
-
-次回からは `run_macro.bat` をダブルクリックするだけで使えます！
+「セットアップがすべて完了しました！」と表示されたら準備完了です。
+お疲れ様でした！次回からは「使い方」に進んでください。
 
 ---
 
 ## 🎯 使い方（毎回）
 
-セットアップが終わったら、以降は超簡単です！
+セットアップが終わったら、以降は**コントロールパネル**を使うだけです。
 
-### 🎮 方法1: コントロールパネルを使う（おすすめ）
+ターミナルで以下のコマンドを実行します。
 
-**`control_panel.bat` をダブルクリック**
+```bash
+# 1. フォルダに移動
+cd /path/to/your/switch-macro
+
+# 2. コントロールパネルを起動
+./control_panel.sh
+```
 
 メニュー画面が表示されます：
 
 ```
 ========================================
-  🎮 Switch マクロ コントロールパネル
+  Nintendo Switch マクロ コントロールパネル
 ========================================
 
-状態: ⚪ マクロ停止中
-Bluetooth: ✅ 接続済み
+状態      : [停止中] マクロ停止中
+Bluetooth : [接続済] アダプタ有効
 
 ========================================
 
-[1] マクロ開始 (通常モード)
+[1] マクロ開始
 [2] マクロ停止
-[3] Bluetooth再接続
-[4] 接続テスト
-[5] 状態確認
+[3] Bluetooth再起動
+[4] 環境チェック
+[5] 状態を更新
 [0] 終了
 
 ========================================
 ```
 
-#### 📝 使い方
+#### 📝 操作手順
 
-1. **PC再起動後の初回**
-   - 「3」を押してBluetooth再接続
-
-2. **Nintendo Switchの準備**
+1. **Nintendo Switchの準備**
    - ホーム → 「コントローラー」→ 「持ちかた/順番を変える」
 
-3. **マクロ開始**
-   - 「1」を押す
-   - Enterキーを押す
-   - 新しいウィンドウでマクロが起動
+2. **マクロ開始**
+   - 「**1**」を押してEnter
+   - 新しいターミナルウィンドウでマクロが起動
 
-4. **マクロ停止**
-   - 「2」を押す
+3. **マクロ停止**
+   - コントロールパネルのウィンドウに戻り、「**2**」を押してEnter
 
-5. **状態確認**
-   - 「5」を押すと最新の状態を確認
-
-### 🚀 方法2: 直接起動（シンプル）
-
-**`run_macro.bat` をダブルクリック**
-
-1. Switchで「持ちかた/順番を変える」を開く
-2. Enterキーを押す
-3. マクロが開始
-
-### 📡 方法3: Bluetooth再接続のみ
-
-**`reconnect_bluetooth.bat` をダブルクリック**
-
-PC再起動後はこれを実行してからマクロを起動してください。
+4. **PC再起動後**
+   - もしBluetoothの調子が悪ければ、「**3**」でサービスを再起動できます。
 
 ---
 
@@ -447,25 +176,9 @@ PC再起動後はこれを実行してからマクロを起動してください
 
 ## 🔄 PC再起動後の使い方
 
-### 🎮 コントロールパネルから（おすすめ）
+基本的に、毎回「使い方」セクションの手順を実行するだけです。
 
-1. **`control_panel.bat` をダブルクリック**
-2. 「**3**」を押してBluetooth再接続
-3. BUSIDを入力（初回のみ、2回目以降は自動）
-4. 完了したらメニューに戻る
-5. 「**1**」を押してマクロ開始
-
-### 📡 再接続のみ
-
-**`reconnect_bluetooth.bat` をダブルクリック**
-
-### 🛠️ 手動接続
-
-PowerShell（管理者）で:
-
-```powershell
-usbipd attach --wsl --busid 2-3
-```
+もしBluetoothがうまく動作しない場合は、`control_panel.sh`を起動し、「**3**」を押してBluetoothサービスを再起動してみてください。
 
 ---
 
@@ -473,112 +186,74 @@ usbipd attach --wsl --busid 2-3
 
 ### 💡 まず試すこと
 
-**`control_panel.bat` → 「4」接続テスト → 「5」状態確認**
+**`./control_panel.sh` → 「4」環境チェック**
 
-問題が自動で診断されます。
+問題の切り分けができます。
 
 ---
 
-### 問題1: 「Bluetoothアダプタが見つかりません」
+### 問題1: 「Bluetoothアダプタが見つかりません」「接続できません」
 
 **解決方法**:
 
 1. **コントロールパネルから**
-   - `control_panel.bat` → 「3」Bluetooth再接続
+   - `./control_panel.sh` → 「3」Bluetooth再起動
 
 2. **または手動で**
-   ```powershell
-   # PowerShell（管理者）
-   usbipd list
-   usbipd attach --wsl --busid 2-3
-   ```
-
-3. **WSL内で確認**
-   ```powershell
-   wsl -d Ubuntu-22.04
-   sudo service bluetooth restart
+   ```bash
+   # ターミナルで実行
+   sudo systemctl restart bluetooth
+   sleep 3
    hciconfig
    ```
+   `UP RUNNING`と表示されていればOKです。
+
+3. **Switchの準備を確認**
+   - Switchの「持ちかた/順番を変える」画面が開いているか確認
+   - 他のコントローラーをすべて切断
 
 ---
 
-### 問題2: 「接続できません」
-
-**原因**: Switchの準備ができていない
-
-**解決方法**:
-1. Switchの「持ちかた/順番を変える」画面が開いているか確認
-2. 他のコントローラーをすべて切断
-3. `control_panel.bat` → 「2」停止 → 「1」開始
-
----
-
-### 問題3: ENTERキーやCTRL+Yが効かない
+### 問題2: ENTERキーやCTRL+Yが効かない
 
 **原因**: ターミナルウィンドウが選択されていない
 
 **解決方法**:
-1. マクロが実行されている黒いウィンドウをクリック
+1. マクロが実行されているターミナルウィンドウをクリックして選択状態にする
 2. ENTERキーまたはCTRL+Yを押す
 
 ---
 
-### 問題4: マクロが停止しない
+### 問題3: マクロが停止しない
 
 **解決方法**:
 
 1. **コントロールパネルから**
-   - `control_panel.bat` → 「2」マクロ停止
+   - `./control_panel.sh` → 「2」マクロ停止
 
 2. **または手動で**
    ```bash
-   wsl -d Ubuntu-22.04
+   # ターミナルで実行
    sudo pkill -f switch_macro.py
    ```
 
 ---
 
-### 問題5: 「Permission denied」エラー
+### 問題4: 「Permission denied」エラー
+
+**原因**: `sudo`（管理者権限）なしで実行しようとしている
 
 **解決方法**:
-
-```bash
-wsl -d Ubuntu-22.04
-cd ~/switch-macro
-sudo python3 src/switch_macro.py
-```
+必ず `./control_panel.sh` を使って起動してください。このスクリプトは内部で正しく`sudo`を使用します。
 
 ---
 
-### 問題6: WSLが起動しない
+### 問題5: 「nxbt: command not found」などのエラー
+
+**原因**: Pythonの仮想環境が有効になっていない
 
 **解決方法**:
-
-```powershell
-wsl --shutdown
-wsl -d Ubuntu-22.04
-```
-
----
-
-### 問題7: nxbtが見つからない
-
-**解決方法**:
-
-```bash
-wsl -d Ubuntu-22.04
-pip3 install nxbt
-echo 'export PATH=$PATH:~/.local/bin' >> ~/.bashrc
-source ~/.bashrc
-```
-
----
-
-### 問題8: control_panel.batで状態が更新されない
-
-**解決方法**:
-
-メニューで「5」を押して手動で更新してください。
+必ず `./control_panel.sh` を使って起動してください。このスクリプトが自動で仮想環境を有効にします。
 
 ---
 
@@ -586,7 +261,7 @@ source ~/.bashrc
 
 ### マクロの編集
 
-`src/switch_macro.py` を開いて、以下の部分を編集:
+`src/switch_macro.py` をテキストエディタで開いて、以下の部分を編集:
 
 ```python
 if macro.is_running:
@@ -616,13 +291,16 @@ if macro.is_running:
 
 ## 🗑️ アンインストール
 
-PowerShell（管理者）で:
+1.  プロジェクトのフォルダを削除します。
+    ```bash
+    rm -rf /path/to/your/switch-macro
+    ```
 
-```powershell
-wsl --unregister Ubuntu-22.04
-```
-
-その後、`switch-macro` フォルダを削除してください。
+2.  （任意）セットアップでインストールしたシステムパッケージを削除したい場合：
+    ```bash
+    sudo apt remove --purge -y python3-pip python3-venv bluez libbluetooth-dev libhidapi-dev
+    sudo apt autoremove -y
+    ```
 
 ---
 
@@ -662,7 +340,7 @@ wsl --unregister Ubuntu-22.04
 
 ### Q1: どのファイルを使えばいいですか？
 
-**A**: **`control_panel.bat`** が一番簡単です！メニューから選ぶだけで全部できます。
+**A**: 初回は`quick_start.sh`を実行し、その後は**`control_panel.sh`**を使うだけです！
 
 ---
 
@@ -672,83 +350,15 @@ wsl --unregister Ubuntu-22.04
 
 ---
 
-### Q3: マクロの速度を変更できますか？
+### Q3: PCがスリープしたらどうなる？
 
-**A**: `src/switch_macro.py` の待機時間を編集してください。
-
----
-
-### Q4: PCがスリープしたらどうなる？
-
-**A**: 接続が切れます。`control_panel.bat` → 「3」でBluetooth再接続してください。
+**A**: 接続が切れます。`control_panel.sh` → 「3」でBluetoothを再起動してみてください。
 
 ---
 
-### Q5: PC再起動後、毎回設定が必要？
+### Q4: マクロを一時停止して後で再開できますか？
 
-**A**: `control_panel.bat` → 「3」で再接続するだけです。BUSIDは保存されます。
-
----
-
-### Q6: ENTERキーを押しても反応しない
-
-**A**: マクロ実行中の黒いウィンドウをクリックしてからENTERキーを押してください。
-
----
-
-### Q7: マクロを一時停止して後で再開できますか？
-
-**A**: はい！ENTERキーを押すと一時停止、もう一度押すと再開します。
-
----
-
-### Q8: control_panel.batとrun_macro.batの違いは？
-
-**A**: 
-- **control_panel.bat**: メニューから全機能を操作（開始/停止/再接続/テスト）
-- **run_macro.bat**: マクロを直接起動（シンプル）
-
-初めての方は **control_panel.bat** がおすすめです！
-
----
-
-### Q9: マクロが勝手に止まる
-
-**A**: `control_panel.bat` → 「5」で状態確認してください。Bluetooth切断が原因の可能性があります。
-
----
-
-### Q10: 複数のSwitchで使えますか？
-
-**A**: はい。ただし、1つずつ接続してください。同時接続はできません。
-
----
-
-## 🆘 それでも解決しない場合
-
-### 🎯 自動診断を試す
-
-**`control_panel.bat` → 「4」接続テスト**
-
-自動で以下を確認します：
-- ✅ Bluetooth接続状態
-- ✅ NXBT インストール状態
-- ✅ マクロファイルの存在
-
-### 📝 手動で確認する手順
-
-1. **PCを再起動**
-2. **Switchを再起動**
-3. **`control_panel.bat` → 「3」でBluetooth再接続**
-4. **`control_panel.bat` → 「4」で接続テスト**
-5. **それでもダメなら、GitHubのIssuesで質問してください**
-
-### 💬 質問する際に含めてほしい情報
-
-- Windows のバージョン（例: Windows 11）
-- エラーメッセージ（スクリーンショットがあると助かります）
-- 接続テストの結果
-- どの手順で問題が発生したか
+**A**: はい！マクロ実行中のウィンドウでENTERキーを押すと一時停止、もう一度押すと再開します。
 
 ---
 
@@ -760,10 +370,12 @@ wsl --unregister Ubuntu-22.04
 
 ## 📝 更新履歴
 
+- v1.2.0 (日付)
+  - `run_macro.sh`を廃止し、`control_panel.sh`に操作を一本化
 - v1.1.0 (2025/10/19)
-  - ENTERキーでマクロ開始/停止切り替え
-  - CTRL+Y停止機能追加
-  - 手順書形式に変更
+  - Linux/Ubuntuに正式対応
+  - ワンクリックセットアップスクリプト `quick_start.sh` を追加
+  - コントロールパネル `control_panel.sh` を追加
 
 - v1.0.0 (2025/10/19)
   - 初回リリース
