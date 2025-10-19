@@ -269,17 +269,33 @@ Always use `./control_panel.sh` to start the macro. This script automatically ac
 Open `src/switch_macro.py` in a text editor and modify the following section:
 
 ```python
-if macro.is_running:
-    loop_count += 1
-    print(f"🔄 Loop {loop_count}...")
+    def execute_macro(self):
+        """
+        Executes the macro.
+        Press ZL -> Add A after 0.2s -> Release all after 0.5s.
+        """
+        try:
+            # Macro definition: Simultaneous presses are separated by spaces.
+            # Format: "BUTTON1 BUTTON2 DURATION" or just "DURATION" (for waiting).
+            macro_sequence = (
+                "ZL 0.2s\n"      # Press ZL for 0.2s
+                "ZL A 0.5s\n"    # Press ZL and A simultaneously for 0.5s
+                "0.1s"           # Release all buttons and wait for 0.1s
+            )
 
-    # Edit this section ↓↓↓
-    
-    macro.press_button("ZL", 0.5)         # Press ZL for 0.5s
-    macro.press_buttons(["ZL", "A"], 0.1) # Press ZL+A for 0.1s
-    macro.wait(0.5)                       # Wait for 0.5s
-    
-    # End of section ↑↑↑
+            # Send the macro (block=True waits for completion).
+            self.nxbt.macro(
+                self.controller_index,
+                macro_sequence,
+                block=True
+            )
+
+            return True
+
+        except Exception as e:
+            print(f"❌ Macro execution error: {e}")
+            self.is_connected = False
+            return False
 ```
 
 ### Available Buttons

@@ -1,5 +1,10 @@
 # 🎮 Pokemon Legends Z-A 自動金策ツール (Linux/Ubuntu版)
 
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Ubuntu-orange)
+![Language](https://img.shields.io/badge/Language-Python-blue.svg)
+![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+
 **超簡単！** スクリプト一つでNintendo Switchを自動操作できるツールです。
 
 ZLボタンを押しながらAボタンを自動で連打し続けます。
@@ -264,17 +269,33 @@ Bluetooth : [接続済] アダプタ有効
 `src/switch_macro.py` をテキストエディタで開いて、以下の部分を編集:
 
 ```python
-if macro.is_running:
-    loop_count += 1
-    print(f"🔄 ループ {loop_count}回目...")
+    def execute_macro(self):
+        """
+        マクロを実行
+        ZL押す → 0.2秒後A追加 → 0.5秒後全部離す
+        """
+        try:
+            # マクロ定義：スペース区切りで同時押し
+            # 形式: "ボタン1 ボタン2 時間" または "時間" (待機のみ)
+            macro_sequence = (
+                "ZL 0.2s\n"  # ZLを0.2秒押す
+                "ZL A 0.5s\n"  # ZLとAを同時に0.5秒押す
+                "0.1s"  # 全ボタン離して0.1秒待機
+            )
 
-    # ここを編集 ↓↓↓
-    
-    macro.press_button("ZL", 0.5)         # ZLを0.5秒押す
-    macro.press_buttons(["ZL", "A"], 0.1) # ZL+A同時押し0.1秒
-    macro.wait(0.5)                       # 0.5秒待つ
-    
-    # ここまで ↑↑↑
+            # マクロを送信（block=Trueで完了まで待機）
+            self.nxbt.macro(
+                self.controller_index,
+                macro_sequence,
+                block=True
+            )
+
+            return True
+
+        except Exception as e:
+            print(f"❌ マクロ実行エラー: {e}")
+            self.is_connected = False
+            return False
 ```
 
 ### 使えるボタン

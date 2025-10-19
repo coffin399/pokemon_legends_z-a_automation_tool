@@ -395,8 +395,8 @@ clear
 # The logic would be to replace the Japanese text inside the `cat << 'EOF'` blocks
 # with the English translations provided in the previous responses.
 
-# For example, for control_panel.sh:
-# cat > "$PROJECT_DIR/control_panel.sh" << 'EOF'
+# For example, for control_panel_en.sh:
+# cat > "$PROJECT_DIR/control_panel_en.sh" << 'EOF'
 # #!/bin/bash
 # ... (English version of the control panel script) ...
 # EOF
@@ -426,7 +426,7 @@ echo
 echo -e "${BLUE}📂 Files Created:${NC}"
 echo "  ✓ .venv/             (Python execution environment)"
 echo "  ✓ src/               (Macro storage folder)"
-echo "  ✓ control_panel.sh   (Control Panel)"
+echo "  ✓ control_panel_en.sh   (Control Panel)"
 echo "  ✓ run_macro.sh       (Macro execution script)"
 echo "  ✓ README.md          (User guide)"
 echo
@@ -484,7 +484,7 @@ echo "3. Select '1' in the control panel to run a macro!"
 echo
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo
-echo -e "${GREEN}For more details, please read README.md${NC}"
+echo -e "${GREEN}For more details, please read README_en.md${NC}"
 echo
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BOLD}${CYAN}║  All set! Happy macroing! 🎮                       ║${NC}"
