@@ -247,12 +247,10 @@ echo
 # 必要なディレクトリを作成
 echo -n "必要なフォルダを作成中... "
 mkdir -p "$PROJECT_DIR/src"
-mkdir -p "$PROJECT_DIR/macros"
 mkdir -p "$PROJECT_DIR/logs"
 echo -e "${GREEN}✓${NC}"
 
-echo "  📁 macros/ ← ここにマクロを保存します"
-echo "  📁 src/    ← 自作のプログラムを保存します"
+echo "  📁 src/    ← ここにマクロを保存します"
 echo "  📁 logs/   ← 実行記録を保存します"
 
 echo
@@ -414,8 +412,13 @@ if [ ! -d ".venv" ]; then
     exit 1
 fi
 
-# 仮想環境を有効化
-source .venv/bin/activate
+# 仮想環境のPythonパス
+VENV_PYTHON="$PROJECT_DIR/.venv/bin/python3"
+
+if [ ! -f "$VENV_PYTHON" ]; then
+    echo -e "${RED}❌ Python実行ファイルが見つかりません${NC}"
+    exit 1
+fi
 
 echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║  Nintendo Switch マクロ実行                ║${NC}"
@@ -427,8 +430,8 @@ if [ $# -eq 0 ]; then
     echo -e "${YELLOW}使い方: $0 <マクロファイル.py>${NC}"
     echo
     echo "📂 利用可能なマクロ:"
-    if [ -d "macros" ] && [ "$(ls -A macros/*.py 2>/dev/null)" ]; then
-        ls -1 macros/*.py | sed 's/^/  /'
+    if [ -d "src" ] && [ "$(ls -A src/*.py 2>/dev/null)" ]; then
+        ls -1 src/*.py | sed 's/^/  /'
     else
         echo "  (まだマクロが作成されていません)"
     fi
@@ -445,10 +448,8 @@ fi
 echo -e "🎮 実行するマクロ: ${GREEN}$(basename "$MACRO_SCRIPT")${NC}"
 echo
 
-# マクロを実行
-python3 "$MACRO_SCRIPT"
-
-deactivate
+# マクロを実行（仮想環境のPythonを直接sudoで実行）
+sudo "$VENV_PYTHON" "$MACRO_SCRIPT"
 EOF
 
 chmod +x "$PROJECT_DIR/run_macro.sh"
@@ -467,7 +468,7 @@ NC='\033[0m'
 
 # 設定
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-MACRO_DIR="$PROJECT_DIR/macros"
+MACRO_DIR="$PROJECT_DIR/src"
 
 # 状態表示
 display_status() {
@@ -479,12 +480,12 @@ display_status() {
     echo
 
     # 実行中のマクロを確認
-    RUNNING_MACROS=$(pgrep -fa "python.*macros/.*\.py" | wc -l)
+    RUNNING_MACROS=$(pgrep -fa "python.*src/.*\.py" | wc -l)
     if [ "$RUNNING_MACROS" -gt 0 ]; then
         echo -e "🎮 マクロの状態: ${GREEN}実行中${NC} (${RUNNING_MACROS}個)"
         echo
         echo "実行中のマクロ:"
-        pgrep -fa "python.*macros/.*\.py" | sed 's/^/  /'
+        pgrep -fa "python.*src/.*\.py" | sed 's/^/  /'
     else
         echo -e "🎮 マクロの状態: ${YELLOW}停止中${NC}"
     fi
@@ -527,7 +528,7 @@ start_macro() {
     echo
 
     if [ ! -d "$MACRO_DIR" ]; then
-        echo -e "${RED}❌ macrosフォルダが見つかりません${NC}"
+        echo -e "${RED}❌ srcフォルダが見つかりません${NC}"
         read -p "Enterで戻る..."
         return
     fi
@@ -538,7 +539,7 @@ start_macro() {
     if [ ${#MACROS[@]} -eq 0 ]; then
         echo -e "${YELLOW}⚠️  実行できるマクロがありません${NC}"
         echo
-        echo "macros/ フォルダに .py ファイルを入れてください"
+        echo "src/ フォルダに .py ファイルを入れてください"
         echo
         read -p "Enterで戻る..."
         return
@@ -595,14 +596,15 @@ start_macro() {
     sleep 1
 
     # 新しいターミナルで実行
+    VENV_PYTHON="$PROJECT_DIR/.venv/bin/python3"
+
     if command -v gnome-terminal &> /dev/null; then
-        gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && python3 '$SELECTED_MACRO'; echo; echo '✅ マクロが終了しました'; echo 'このウィンドウを閉じてください'; read"
+        gnome-terminal -- bash -c "cd '$PROJECT_DIR' && sudo '$VENV_PYTHON' '$SELECTED_MACRO'; echo; echo '✅ マクロが終了しました'; echo 'このウィンドウを閉じてください'; read"
     elif command -v xterm &> /dev/null; then
-        xterm -hold -e "cd '$PROJECT_DIR' && source .venv/bin/activate && python3 '$SELECTED_MACRO'" &
+        xterm -hold -e "cd '$PROJECT_DIR' && sudo '$VENV_PYTHON' '$SELECTED_MACRO'" &
     else
         cd "$PROJECT_DIR"
-        source .venv/bin/activate
-        python3 "$SELECTED_MACRO"
+        sudo "$VENV_PYTHON" "$SELECTED_MACRO"
         read -p "Enterで戻る..."
         return
     fi
@@ -624,18 +626,18 @@ stop_macro() {
     echo
 
     # 実行中のマクロを検索
-    MACRO_PIDS=$(pgrep -f "python.*macros/.*\.py")
+    MACRO_PIDS=$(pgrep -f "python.*src/.*\.py")
 
     if [ -z "$MACRO_PIDS" ]; then
         echo -e "${YELLOW}ℹ️  実行中のマクロはありません${NC}"
     else
         echo "実行中のマクロ:"
-        pgrep -fa "python.*macros/.*\.py"
+        pgrep -fa "python.*src/.*\.py"
         echo
         read -p "これらを停止しますか？ (y/N): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            pkill -f "python.*macros/.*\.py"
+            pkill -f "python.*src/.*\.py"
             echo -e "${GREEN}✅ マクロを停止しました${NC}"
         else
             echo "キャンセルしました"
@@ -708,7 +710,7 @@ run_test() {
     fi
 
     # 4. マクロディレクトリ
-    echo -n "[4/6] 📂 マクロフォルダ... "
+    echo -n "[4/6] 📂 マクロフォルダ (src/)... "
     if [ -d "$MACRO_DIR" ]; then
         MACRO_COUNT=$(find "$MACRO_DIR" -maxdepth 1 -name "*.py" -type f | wc -l)
         echo -e "${GREEN}✓${NC} ($MACRO_COUNT 個)"
@@ -766,8 +768,8 @@ EOF
 
 chmod +x "$PROJECT_DIR/control_panel.sh"
 
-# LとRボタンマクロの作成
-cat > "$PROJECT_DIR/macros/press_lr.py" << 'EOF'
+# LとRボタンマクロの作成（src/フォルダに配置）
+cat > "$PROJECT_DIR/src/press_lr.py" << 'EOF'
 #!/usr/bin/env python3
 """
 Nintendo Switch LとRボタンを押すマクロ
@@ -777,8 +779,6 @@ Switchに接続してLとRボタンを同時に押す操作を実行します。
 
 import nxbt
 import time
-import os
-import sys
 
 def main():
     print("=" * 50)
@@ -786,19 +786,16 @@ def main():
     print("=" * 50)
     print()
 
-    # 権限チェック
-    if os.geteuid() != 0:
-        print("⚠️  このマクロは管理者権限が必要です")
-        print()
-        print("再実行しています...")
-        print()
-        # sudoで自分自身を再実行
-        os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
-
     # NXBTインスタンスの作成
     print("🔧 初期化中...")
     try:
         nx = nxbt.Nxbt()
+    except PermissionError as e:
+        print(f"❌ 権限エラー: {e}")
+        print()
+        print("このマクロは管理者権限で実行する必要があります。")
+        print("コントロールパネルから実行してください。")
+        return
     except Exception as e:
         print(f"❌ 初期化エラー: {e}")
         print()
@@ -899,7 +896,7 @@ if __name__ == "__main__":
         print(f"❌ 予期しないエラー: {e}")
 EOF
 
-chmod +x "$PROJECT_DIR/macros/press_lr.py"
+chmod +x "$PROJECT_DIR/src/press_lr.py"
 
 # READMEの作成
 cat > "$PROJECT_DIR/README.md" << 'EOF'
@@ -950,9 +947,8 @@ gnome-session-quit --logout --no-prompt
 ├── setup.sh           ← 最初に実行（1回だけ）
 ├── control_panel.sh   ← マクロを実行するときに使う
 ├── run_macro.sh       ← 直接マクロを実行したいとき用
-├── macros/            ← マクロを保存するフォルダ
+├── src/               ← マクロを保存するフォルダ
 │   └── press_lr.py    ← サンプルマクロ（LとRボタン）
-├── src/               ← 自作プログラム用
 ├── logs/              ← 実行記録用
 └── .venv/             ← Python環境（自動作成）
 ```
@@ -978,7 +974,7 @@ gnome-session-quit --logout --no-prompt
 
 ## 📝 自分でマクロを作る
 
-`macros/` フォルダに `.py` ファイルを作成してください。
+`src/` フォルダに `.py` ファイルを作成してください。
 
 ### 簡単な例：Aボタンを押す
 
@@ -1073,7 +1069,7 @@ echo -e "${NC}"
 echo
 echo -e "${BLUE}📂 作成されたファイル:${NC}"
 echo "  ✓ .venv/             (Python実行環境)"
-echo "  ✓ macros/            (マクロ保存フォルダ)"
+echo "  ✓ src/               (マクロ保存フォルダ)"
 echo "  ✓ control_panel.sh   (コントロールパネル)"
 echo "  ✓ run_macro.sh       (マクロ実行スクリプト)"
 echo "  ✓ README.md          (使い方ガイド)"
