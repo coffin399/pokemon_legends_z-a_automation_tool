@@ -41,7 +41,7 @@ switch-macro/
 ├── 📄 README.md               ← このファイル（完全ガイド）
 ├── 📄 LICENSE                 ← MITライセンス
 │
-├── 🚀 quick_start.sh          ← ★【最初に行う】ワンクリック環境構築スクリプト
+├── 🚀 set_up.sh          ← ★【最初に行う】ワンクリック環境構築スクリプト
 ├── 🎮 control_panel.sh        ← ★【これで操作】コントロールパネル
 │
 └── 📁 src/                    ← メインソースコード
@@ -50,12 +50,12 @@ switch-macro/
 
 ### 🎯 どのファイルを使う？
 
-| ファイル | 用途 |
-|---------|------|
-| `quick_start.sh` | **初回のみ** - 必要なものを全て自動インストールします。 |
+| ファイル               | 用途 |
+|--------------------|------|
+| `set_up.sh`        | **初回のみ** - 必要なものを全て自動インストールします。 |
 | `control_panel.sh` | **毎回使用** - マクロの開始/停止、接続確認など全てここから行います。 |
 
-**`quick_start.sh`で環境構築後、`control_panel.sh`を使うだけ！**
+**`set_up.sh`で環境構築後、`control_panel.sh`を使うだけ！**
 
 ---
 
@@ -81,10 +81,10 @@ switch-macro/
 cd /path/to/your/switch-macro
 
 # 2. スクリプトに実行権限を与えます（初回のみ）
-chmod +x quick_start.sh
+chmod +x set_up.sh
 
 # 3. セットアップスクリプトを実行します
-./quick_start.sh
+./set_up.sh
 ```
 
 実行中にパスワードを聞かれたら、お使いのPCのログインパスワードを入力してください。
@@ -340,7 +340,7 @@ if macro.is_running:
 
 ### Q1: どのファイルを使えばいいですか？
 
-**A**: 初回は`quick_start.sh`を実行し、その後は**`control_panel.sh`**を使うだけです！
+**A**: 初回は`set_up.sh`を実行し、その後は**`control_panel.sh`**を使うだけです！
 
 ---
 
@@ -369,12 +369,13 @@ if macro.is_running:
 ---
 
 ## 📝 更新履歴
-
-- v1.2.0 (日付)
+- v2.0.0 (2025/10/20)
+  - macroを送信する形式に変更
+- v1.2.0 (2025/10/19)
   - `run_macro.sh`を廃止し、`control_panel.sh`に操作を一本化
 - v1.1.0 (2025/10/19)
   - Linux/Ubuntuに正式対応
-  - ワンクリックセットアップスクリプト `quick_start.sh` を追加
+  - ワンクリックセットアップスクリプト `set_up.sh` を追加
   - コントロールパネル `control_panel.sh` を追加
 
 - v1.0.0 (2025/10/19)
