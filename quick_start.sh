@@ -73,6 +73,11 @@ PACKAGES=(
     libglib2.0-dev
     meson
     ninja-build
+    python3-gi
+    python3-gi-cairo
+    python3-dbus
+    libdbus-1-dev
+    libdbus-glib-1-dev
 )
 
 echo "インストール対象パッケージ:"
@@ -171,33 +176,51 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 
 echo "必要なライブラリをインストールしています..."
 echo "  - nxbt (Nintendo Switch Bluetooth ライブラリ)"
-echo "  - pydbus (D-Bus Python バインディング)"
-echo "  - PyGObject (GObject イントロスペクション)"
 echo
 
-# PyGObjectのインストールを試みる
-echo "PyGObjectをインストール中..."
-if ! pip install PyGObject 2>&1 | tee /tmp/pygobject_install.log; then
-    echo
-    echo -e "${YELLOW}⚠️  PyGObjectのソースからのビルドに失敗しました${NC}"
-    echo "システムパッケージ版をインストールします..."
-
-    # システムパッケージ版をインストール
-    sudo apt install -y python3-gi python3-gi-cairo
-
-    # システムパッケージへのシンボリックリンクを作成
-    SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])")
+# システムパッケージへのシンボリックリンクを作成する関数
+create_system_links() {
     VENV_SITE_PACKAGES="$PROJECT_DIR/.venv/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages"
 
     echo "システムパッケージへのリンクを作成しています..."
-    ln -sf /usr/lib/python3/dist-packages/gi "$VENV_SITE_PACKAGES/" 2>/dev/null || true
-    ln -sf /usr/lib/python3/dist-packages/cairo "$VENV_SITE_PACKAGES/" 2>/dev/null || true
 
-    echo -e "${GREEN}✅ システムパッケージ版のPyGObjectを使用します${NC}"
-fi
+    # PyGObject (gi)
+    if [ -d "/usr/lib/python3/dist-packages/gi" ]; then
+        ln -sf /usr/lib/python3/dist-packages/gi "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+        echo "  ✓ gi (PyGObject)"
+    fi
 
-# 残りのライブラリをインストール
-pip install nxbt pydbus
+    # Cairo
+    if [ -d "/usr/lib/python3/dist-packages/cairo" ]; then
+        ln -sf /usr/lib/python3/dist-packages/cairo "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+        echo "  ✓ cairo"
+    fi
+
+    # dbus-python
+    if [ -d "/usr/lib/python3/dist-packages/dbus" ]; then
+        ln -sf /usr/lib/python3/dist-packages/dbus "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+        echo "  ✓ dbus"
+    fi
+
+    # _dbus_bindings と _dbus_glib_bindings
+    for file in /usr/lib/python3/dist-packages/_dbus*.so; do
+        if [ -f "$file" ]; then
+            ln -sf "$file" "$VENV_SITE_PACKAGES/" 2>/dev/null || true
+            echo "  ✓ $(basename $file)"
+        fi
+    done
+}
+
+# システムパッケージへのリンクを作成
+create_system_links
+
+echo
+echo -e "${GREEN}✅ システムパッケージ版のPyGObjectとdbusを使用します${NC}"
+echo
+
+# nxbtのみpipでインストール
+echo "nxbtをインストール中..."
+pip install nxbt
 
 echo
 echo -e "${GREEN}✅ Pythonライブラリのインストールが完了しました${NC}"
@@ -205,7 +228,11 @@ echo -e "${GREEN}✅ Pythonライブラリのインストールが完了しま�
 # インストール確認
 echo
 echo "インストールされたパッケージ:"
-pip list | grep -E "nxbt|pydbus|PyGObject"
+pip list | grep -E "nxbt"
+echo
+echo "システムパッケージ (リンク済み):"
+python3 -c "import gi; print(f'  - PyGObject: {gi.__version__}')" 2>/dev/null || echo "  - PyGObject: OK"
+python3 -c "import dbus; print(f'  - dbus-python: {dbus.__version__}')" 2>/dev/null || echo "  - dbus-python: OK"
 
 deactivate
 
