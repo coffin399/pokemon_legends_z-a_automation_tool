@@ -116,6 +116,53 @@ else
     exit 1
 fi
 
+# ユーザーをbluetoothグループに追加
+echo "ユーザーをbluetoothグループに追加しています..."
+if ! groups $USER | grep -q '\bbluetooth\b'; then
+    sudo usermod -a -G bluetooth $USER
+    echo -e "${YELLOW}⚠️  bluetoothグループに追加されました${NC}"
+    echo -e "${YELLOW}   変更を反映するには、ログアウト→ログインが必要です${NC}"
+    NEED_RELOGIN=true
+else
+    echo "既にbluetoothグループに所属しています"
+fi
+
+# Bluetooth設定ディレクトリの権限設定
+echo "Bluetooth設定ディレクトリの権限を設定しています..."
+sudo mkdir -p /var/run/bluetooth
+sudo chmod 755 /var/run/bluetooth
+
+# D-Bus設定ファイルの作成（nxbt用）
+echo "D-Bus設定ファイルを作成しています..."
+sudo tee /etc/dbus-1/system.d/nxbt.conf > /dev/null << 'DBUS_EOF'
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <policy group="bluetooth">
+    <allow send_destination="org.bluez"/>
+    <allow send_interface="org.bluez.Agent1"/>
+    <allow send_interface="org.bluez.MediaEndpoint1"/>
+    <allow send_interface="org.bluez.MediaPlayer1"/>
+    <allow send_interface="org.bluez.ThermometerWatcher1"/>
+    <allow send_interface="org.bluez.AlertAgent1"/>
+    <allow send_interface="org.bluez.Profile1"/>
+    <allow send_interface="org.bluez.HeartRateWatcher1"/>
+    <allow send_interface="org.bluez.CyclingSpeedWatcher1"/>
+    <allow send_interface="org.bluez.GattCharacteristic1"/>
+    <allow send_interface="org.bluez.GattDescriptor1"/>
+    <allow send_interface="org.freedesktop.DBus.ObjectManager"/>
+    <allow send_interface="org.freedesktop.DBus.Properties"/>
+  </policy>
+</busconfig>
+DBUS_EOF
+
+echo -e "${GREEN}✅ D-Bus設定ファイルを作成しました${NC}"
+
+# D-Busサービスを再読み込み
+echo "D-Busサービスを再読み込みしています..."
+sudo systemctl reload dbus
+
 # --- ステップ3: プロジェクトディレクトリの準備 ---
 echo
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -856,13 +903,41 @@ else
     echo -e "${RED}❌ 仮想環境: 未作成${NC}"
 fi
 echo
+
+# 再ログインが必要かチェック
+if [ "$NEED_RELOGIN" = true ]; then
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}⚠️  重要: 再ログインが必要です${NC}"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo
+    echo "bluetoothグループへの追加を反映するため、"
+    echo "一度ログアウトして再ログインしてください。"
+    echo
+    echo "再ログイン後、マクロを実行できるようになります。"
+    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo
+fi
 echo -e "${YELLOW}📋 次のステップ:${NC}"
 echo
-echo "1. Switch本体で以下の操作を行ってください:"
+if [ "$NEED_RELOGIN" = true ]; then
+    echo -e "${RED}1. 【重要】ログアウト→ログインしてください${NC}"
+    echo
+    echo "2. ログイン後、以下のコマンドで動作確認:"
+    echo -e "   ${GREEN}groups${NC}"
+    echo "   → 'bluetooth' が表示されればOKです"
+    echo
+    echo "3. Switch本体の準備:"
+else
+    echo "1. Switch本体の準備:"
+fi
 echo "   「設定」→「コントローラーとセンサー」→「コントローラー」"
 echo "   →「持ちかた/順番を変える」画面を開く"
 echo
-echo "2. コントロールパネルを起動:"
+if [ "$NEED_RELOGIN" = true ]; then
+    echo "4. コントロールパネルを起動:"
+else
+    echo "2. コントロールパネルを起動:"
+fi
 echo -e "   ${GREEN}./control_panel.sh${NC}"
 echo
 echo "   または、直接マクロを実行:"
