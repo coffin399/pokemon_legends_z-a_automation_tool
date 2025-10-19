@@ -2,7 +2,7 @@
 """
 Nintendo Switch 自動マクロツール
 ZLを押しながらAボタンを自動連打するスクリプト
-ENTERキーまたはCTRL+Yでマクロの開始/停止を切り替え
+ENTERキーでマクロの開始/停止、Aキーで再接続
 """
 
 import time
@@ -20,12 +20,14 @@ class SwitchMacro:
         self.controller_index = None
         self.is_running = False
         self.should_stop = False
+        self.is_connected = False
 
     def connect(self):
         """Switchに接続"""
         try:
             print("\n📡 Bluetoothアダプタを検索中...")
-            self.nxbt = Nxbt()
+            if self.nxbt is None:
+                self.nxbt = Nxbt()
 
             print("🔌 Switchに接続中...")
             print("   ※ Switchで「持ちかた/順番を変える」画面を開いてください")
@@ -42,6 +44,7 @@ class SwitchMacro:
             time.sleep(2)
 
             print("✅ 接続成功！ コントローラーとして認識されました")
+            self.is_connected = True
             return True
 
         except Exception as e:
@@ -50,7 +53,24 @@ class SwitchMacro:
             print("  1. Switchの「持ちかた/順番を変える」画面が開いているか")
             print("  2. Bluetoothアダプタが正しく接続されているか")
             print("  3. 他のコントローラーが接続されていないか")
+            self.is_connected = False
             return False
+
+    def reconnect(self):
+        """再接続"""
+        print("\n🔄 再接続を試みます...")
+        self.is_running = False  # マクロを一時停止
+
+        # 既存の接続を切断
+        if self.controller_index is not None:
+            try:
+                self.nxbt.remove_controller(self.controller_index)
+                self.controller_index = None
+            except Exception:
+                pass
+
+        # 再接続
+        return self.connect()
 
     def press_button(self, button, duration=0.1):
         """
@@ -68,10 +88,11 @@ class SwitchMacro:
             # ボタンを押す
             self.nxbt.press_buttons(self.controller_index, [button])
             time.sleep(duration)
-            # ボタンを離す
-            self.nxbt.release_buttons(self.controller_index, [button])
+            # ボタンを離す（空のリストを渡す）
+            self.nxbt.press_buttons(self.controller_index, [])
         except Exception as e:
             print(f"❌ ボタン操作エラー: {e}")
+            self.is_connected = False
 
     def press_buttons(self, buttons, duration=0.1):
         """
@@ -89,10 +110,11 @@ class SwitchMacro:
             # 複数ボタンを同時に押す
             self.nxbt.press_buttons(self.controller_index, buttons)
             time.sleep(duration)
-            # すべてのボタンを離す
-            self.nxbt.release_buttons(self.controller_index, buttons)
+            # すべてのボタンを離す（空のリストを渡す）
+            self.nxbt.press_buttons(self.controller_index, [])
         except Exception as e:
             print(f"❌ ボタン操作エラー: {e}")
+            self.is_connected = False
 
     def wait(self, duration):
         """指定時間待機"""
@@ -105,6 +127,7 @@ class SwitchMacro:
                 print("\n🔌 切断中...")
                 self.nxbt.remove_controller(self.controller_index)
                 print("✅ 切断完了")
+                self.is_connected = False
             except Exception as e:
                 print(f"⚠️ 切断時の警告: {e}")
 
@@ -112,11 +135,11 @@ class SwitchMacro:
 def check_input(macro_obj):
     """
     キー入力を監視するスレッド
-    ENTERまたはCTRL+Yでマクロの開始/停止を切り替え
+    ENTERでマクロの開始/停止、Aキーで再接続、CTRL+Cで終了
     """
     print("\n💡 操作方法:")
     print("  ▶ ENTERキー: マクロ開始/停止")
-    print("  ▶ CTRL+Y: マクロ停止")
+    print("  ▶ Aキー: 再接続")
     print("  ▶ CTRL+C: プログラム終了\n")
 
     while not macro_obj.should_stop:
@@ -127,6 +150,10 @@ def check_input(macro_obj):
 
                 # ENTERキー（改行）をチェック
                 if char == '\n':
+                    if not macro_obj.is_connected:
+                        print("\n⚠️  接続されていません。Aキーで再接続してください")
+                        continue
+
                     if macro_obj.is_running:
                         print("\n⏸️  マクロを停止しました")
                         print("   再開するにはENTERキーを押してください\n")
@@ -135,11 +162,9 @@ def check_input(macro_obj):
                         print("\n▶️  マクロを開始します！\n")
                         macro_obj.is_running = True
 
-                # CTRL+Y（ASCII 25）をチェック
-                elif ord(char) == 25:
-                    print("\n⏹️  CTRL+Y が押されました")
-                    print("   マクロを停止します...\n")
-                    macro_obj.is_running = False
+                # Aキー（再接続）
+                elif char.lower() == 'a':
+                    macro_obj.reconnect()
 
         except Exception:
             pass
@@ -148,14 +173,14 @@ def check_input(macro_obj):
 def zl_a_loop():
     """
     メインマクロ: ZLを押しながら0.5秒後にAを押す動作をループ
-    ENTERキーまたはCTRL+Yで開始/停止を切り替え
+    ENTERキーで開始/停止、Aキーで再接続
     """
     macro = SwitchMacro()
 
     # Switchに接続
     if not macro.connect():
-        print("\n❌ 接続に失敗しました。終了します。")
-        sys.exit(1)
+        print("\n❌ 接続に失敗しました。")
+        print("Aキーを押して再接続を試みるか、CTRL+Cで終了してください。")
 
     print("\n" + "=" * 50)
     print("🎮 マクロツール起動完了！")
@@ -166,13 +191,16 @@ def zl_a_loop():
     input_thread = threading.Thread(target=check_input, args=(macro,), daemon=True)
     input_thread.start()
 
-    print("\n待機中... ENTERキーを押してマクロを開始してください")
+    if macro.is_connected:
+        print("\n待機中... ENTERキーを押してマクロを開始してください")
+    else:
+        print("\n待機中... Aキーを押して接続してください")
 
     loop_count = 0
 
     try:
         while not macro.should_stop:
-            if macro.is_running:
+            if macro.is_running and macro.is_connected:
                 loop_count += 1
                 print(f"🔄 ループ {loop_count}回目...")
 
@@ -188,6 +216,11 @@ def zl_a_loop():
                 macro.wait(0.5)
 
                 print(f"   ✓ 完了 (合計: {loop_count}回)\n")
+
+                # 接続が切れた場合の処理
+                if not macro.is_connected:
+                    print("\n⚠️  接続が切れました。Aキーで再接続してください")
+                    macro.is_running = False
             else:
                 # マクロが停止中の場合は短く待機
                 time.sleep(0.1)
@@ -214,7 +247,7 @@ if __name__ == "__main__":
 ║     🎮 Nintendo Switch 自動マクロツール 🎮              ║
 ║                                                       ║
 ║  ZL+A 自動連打プログラム                                 ║
-║  制御: ENTER（開始/停止）/ CTRL+Y（停止）                 ║
+║  制御: ENTER（開始/停止）/ A（再接続）                    ║
 ║  終了: CTRL+C                                         ║
 ║                                                      ║
 ╚══════════════════════════════════════════════════════╝
