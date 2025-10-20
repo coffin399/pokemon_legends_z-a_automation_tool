@@ -111,7 +111,10 @@ start_macro() {
     echo "Starting the macro ($selected_script) in a new window..."
 
     # Run in a new window using gnome-terminal
-    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$selected_script_path'; exec bash"
+    # ★★★ FIX ★★★
+    # Directly specify the python interpreter inside the venv with sudo
+    # to ensure the virtual environment is used with root privileges.
+    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && sudo .venv/bin/python3 '$selected_script_path'; exec bash"
 
     sleep 2
     echo

@@ -65,7 +65,6 @@ start_macro() {
     fi
 
     # srcディレクトリから.pyファイルを検索して配列に格納
-    # 日本語ファイル名も正しく扱えるようにします
     local src_dir="$PROJECT_DIR/src"
     if [ ! -d "$src_dir" ]; then
         echo -e "${RED}[エラー] src/ ディレクトリが見つかりません。パスを確認してください: $src_dir${NC}"
@@ -112,7 +111,9 @@ start_macro() {
     echo "マクロ ($selected_script) を新しいウィンドウで起動中..."
 
     # gnome-terminalを使って別ウィンドウで実行
-    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$selected_script_path'; exec bash"
+    # ★★★ 修正点 ★★★
+    # sudoで仮想環境内のpythonを直接指定することで、仮想環境が有効な状態で実行します。
+    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && sudo .venv/bin/python3 '$selected_script_path'; exec bash"
 
     sleep 2
     echo
@@ -130,7 +131,7 @@ stop_macro() {
     echo "========================================"
     echo
     if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
-        sudo pkill -f "$MACRO_SEARCH_PATTERN"
+        sudo pkill -f "$MAC_SEARCH_PATTERN"
         echo -e "${GREEN}[完了] マクロを停止しました。${NC}"
     else
         echo -e "${YELLOW}[情報] マクロは実行されていませんでした。${NC}"

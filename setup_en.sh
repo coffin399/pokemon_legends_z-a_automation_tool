@@ -389,46 +389,20 @@ deactivate
 sleep 2
 clear
 
-# --- Create Launch Scripts ---
-# The rest of the script generation part is omitted for brevity,
-# as it would be identical to the original script but with English text.
-# The logic would be to replace the Japanese text inside the `cat << 'EOF'` blocks
-# with the English translations provided in the previous responses.
-
-# For example, for control_panel_en.sh:
-# cat > "$PROJECT_DIR/control_panel_en.sh" << 'EOF'
-# #!/bin/bash
-# ... (English version of the control panel script) ...
-# EOF
-
-# And for README.md:
-# cat > "$PROJECT_DIR/README.md" << 'EOF'
-# # 🎮 Nintendo Switch Macro Environment
-# ... (English version of the README) ...
-# EOF
-
-# This setup script is quite complex and generates other files.
-# I will stop here and provide the final completion message in English.
-
-sleep 1
-clear
-
 # --- Completion Message ---
 echo
 echo -e "${BOLD}${GREEN}"
 echo "╔════════════════════════════════════════════════════════╗"
 echo "║                                                        ║"
-echo "║           🎉 Setup Complete! 🎉                       ║"
+echo "║           🎉 Environment Setup Complete! 🎉           ║"
 echo "║                                                        ║"
 echo "╚════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 echo
-echo -e "${BLUE}📂 Files Created:${NC}"
+echo -e "${BLUE}📂 Folders Prepared:${NC}"
 echo "  ✓ .venv/             (Python execution environment)"
 echo "  ✓ src/               (Macro storage folder)"
-echo "  ✓ control_panel_en.sh   (Control Panel)"
-echo "  ✓ run_macro.sh       (Macro execution script)"
-echo "  ✓ README.md          (User guide)"
+echo "  ✓ logs/              (Log storage folder)"
 echo
 echo -e "${BLUE}📍 Project Location:${NC}"
 echo -e "  ${YELLOW}$PROJECT_DIR${NC}"
@@ -468,23 +442,22 @@ echo
 if [ "$NEED_RELOGIN" = true ]; then
     echo -e "${YELLOW}1. Log out and log back in (don't forget!)${NC}"
     echo
-    echo "2. After logging in, run the following command:"
+    echo "2. After logging in, place your custom macro (.py) file in the src/ folder."
 else
-    echo "1. Run the following command:"
+    echo "1. Place your custom macro (.py) file in the src/ folder."
 fi
 
-echo -e "   ${BOLD}${GREEN}./control_panel.sh${NC}"
 echo
-echo "2. Prepare your Switch:"
+echo "3. Run your macro directly from the terminal."
+echo "   Example:"
+echo -e "   ${BOLD}${GREEN}sudo .venv/bin/python3 src/your_macro.py${NC}"
+echo
+echo "4. Prepare your Switch:"
 echo "   - Press the HOME button"
 echo "   - Select 'Controllers'"
 echo "   - Select 'Change Grip/Order'"
 echo
-echo "3. Select '1' in the control panel to run a macro!"
-echo
 echo -e "${BOLD}${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo
-echo -e "${GREEN}For more details, please read README_en.md${NC}"
 echo
 echo -e "${BOLD}${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BOLD}${CYAN}║  All set! Happy macroing! 🎮                       ║${NC}"
