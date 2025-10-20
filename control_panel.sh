@@ -7,8 +7,12 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # --- 設定 ---
-PROJECT_DIR="$HOME/switch-macro"
-# 特定のスクリプトは指定せず、実行時に選択する
+# スクリプトが置かれているディレクトリをプロジェクトディレクトリとして自動的に特定します。
+# これにより、プロジェクトをどこに置いてもスクリプトが正しく動作するようになります。
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+PROJECT_DIR="$SCRIPT_DIR"
+
+# マクロのプロセスを検索するためのパターン
 MACRO_SEARCH_PATTERN="python3 $PROJECT_DIR/src/.*\.py"
 
 # --- 関数定義 ---
@@ -61,7 +65,15 @@ start_macro() {
     fi
 
     # srcディレクトリから.pyファイルを検索して配列に格納
-    mapfile -t macro_files < <(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
+    # 日本語ファイル名も正しく扱えるようにします
+    local src_dir="$PROJECT_DIR/src"
+    if [ ! -d "$src_dir" ]; then
+        echo -e "${RED}[エラー] src/ ディレクトリが見つかりません。パスを確認してください: $src_dir${NC}"
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    mapfile -t macro_files < <(find "$src_dir" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
 
     if [ ${#macro_files[@]} -eq 0 ]; then
         echo -e "${RED}[エラー] src/ ディレクトリに実行可能なマクロ (.pyファイル) が見つかりません。${NC}"
@@ -187,7 +199,7 @@ run_test() {
 
     # 3. マクロファイル
     echo -n "[3/4] マクロファイル (src/*.py)... "
-    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py")" ]; then
+    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" 2>/dev/null)" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
         echo -e "${RED}[NG] src/ に .py ファイルが見つかりません${NC}"

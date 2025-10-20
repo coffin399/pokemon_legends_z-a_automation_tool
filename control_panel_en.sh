@@ -7,8 +7,12 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # --- Settings ---
-PROJECT_DIR="$HOME/switch-macro"
-# No longer specifying a single script, will select at runtime
+# Automatically determine the project directory based on the script's location.
+# This allows the script to work regardless of where the project is cloned.
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+PROJECT_DIR="$SCRIPT_DIR"
+
+# Pattern to search for running macro processes
 MACRO_SEARCH_PATTERN="python3 $PROJECT_DIR/src/.*\.py"
 
 # --- Function Definitions ---
@@ -61,7 +65,14 @@ start_macro() {
     fi
 
     # Find .py files in the src directory and store them in an array
-    mapfile -t macro_files < <(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
+    local src_dir="$PROJECT_DIR/src"
+    if [ ! -d "$src_dir" ]; then
+        echo -e "${RED}[ERROR] src/ directory not found. Please check the path: $src_dir${NC}"
+        read -p "Press Enter to return to the menu..."
+        return
+    fi
+
+    mapfile -t macro_files < <(find "$src_dir" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
 
     if [ ${#macro_files[@]} -eq 0 ]; then
         echo -e "${RED}[ERROR] No runnable macro (.py file) found in the src/ directory.${NC}"
@@ -187,7 +198,7 @@ run_test() {
 
     # 3. Macro file
     echo -n "[3/4] Macro file (src/*.py)... "
-    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py")" ]; then
+    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" 2>/dev/null)" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
         echo -e "${RED}[FAIL] No .py files found in src/${NC}"
