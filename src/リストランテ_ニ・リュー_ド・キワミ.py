@@ -84,7 +84,6 @@ class SwitchMacro:
             macro_sequence = (
                 "ZL 0.2s\n"  # ZLを0.2秒押す
                 "ZL A 0.3s\n"  # ZLとAを同時に0.3秒押す
-                "ZL B 0.3s\n"  # ZLとBを同時に0.3秒押す
                 "ZL Y 0.3s\n"  # ZLとYを同時に0.3秒押す
                 "ZL X 0.3s\n"  # ZLとXを同時に0.3秒押す
                 "0.1s"  # 全ボタン離して0.1秒待機

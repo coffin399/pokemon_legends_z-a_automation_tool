@@ -84,7 +84,6 @@ class SwitchMacro:
             macro_sequence = (
                 "ZL 0.2s\n"      # Press ZL for 0.2s
                 "ZL A 0.3s\n"    # Press ZL and A simultaneously for 0.3s
-                "ZL B 0.3s\n"    # Press ZL and B simultaneously for 0.3s
                 "ZL Y 0.3s\n"    # Press ZL and Y simultaneously for 0.3s
                 "ZL X 0.3s\n"    # Press ZL and X simultaneously for 0.3s
             )
