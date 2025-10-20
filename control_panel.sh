@@ -8,7 +8,8 @@ NC='\033[0m' # No Color
 
 # --- 設定 ---
 PROJECT_DIR="$HOME/switch-macro"
-MACRO_SCRIPT="src/switch_macro.py"
+# 特定のスクリプトは指定せず、実行時に選択する
+MACRO_SEARCH_PATTERN="python3 $PROJECT_DIR/src/.*\.py"
 
 # --- 関数定義 ---
 
@@ -20,7 +21,7 @@ display_status() {
     echo
 
     # マクロ状態確認
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
         echo -e "状態      : ${GREEN}[実行中]${NC} マクロ実行中"
     else
         echo -e "状態      : ${YELLOW}[停止中]${NC} マクロ停止中"
@@ -53,19 +54,53 @@ start_macro() {
     echo "  マクロ開始"
     echo "========================================"
     echo
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
         echo -e "${YELLOW}[警告] マクロは既に実行中です。${NC}"
         read -p "Enterキーを押してメニューに戻ります..."
         return
     fi
 
+    # srcディレクトリから.pyファイルを検索して配列に格納
+    mapfile -t macro_files < <(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
+
+    if [ ${#macro_files[@]} -eq 0 ]; then
+        echo -e "${RED}[エラー] src/ ディレクトリに実行可能なマクロ (.pyファイル) が見つかりません。${NC}"
+        read -p "Enterキーを押してメニューに戻ります..."
+        return
+    fi
+
+    echo "実行するマクロを選択してください:"
+    for i in "${!macro_files[@]}"; do
+        echo "  [$((i+1))] ${macro_files[$i]}"
+    done
+    echo "  [0] メニューに戻る"
+    echo
+
+    read -p "選択: " choice
+
+    # 入力値の検証
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 0 ] || [ "$choice" -gt ${#macro_files[@]} ]; then
+        echo -e "${RED}無効な選択です。${NC}"
+        sleep 2
+        return
+    fi
+
+    if [ "$choice" -eq 0 ]; then
+        return
+    fi
+
+    # 選択されたスクリプト
+    selected_script="${macro_files[$((choice-1))]}"
+    selected_script_path="src/$selected_script"
+
+    echo
     echo "Switchで「持ちかた/順番を変える」を開いてください"
     read -p "準備ができたらEnterキーを押してください..."
 
-    echo "マクロを新しいウィンドウで起動中..."
+    echo "マクロ ($selected_script) を新しいウィンドウで起動中..."
 
     # gnome-terminalを使って別ウィンドウで実行
-    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$MACRO_SCRIPT'; exec bash"
+    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$selected_script_path'; exec bash"
 
     sleep 2
     echo
@@ -82,8 +117,8 @@ stop_macro() {
     echo "  マクロ停止"
     echo "========================================"
     echo
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
-        sudo pkill -f "$MACRO_SCRIPT"
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
+        sudo pkill -f "$MACRO_SEARCH_PATTERN"
         echo -e "${GREEN}[完了] マクロを停止しました。${NC}"
     else
         echo -e "${YELLOW}[情報] マクロは実行されていませんでした。${NC}"
@@ -151,11 +186,11 @@ run_test() {
     fi
 
     # 3. マクロファイル
-    echo -n "[3/4] マクロファイル... "
-    if [ -f "$PROJECT_DIR/$MACRO_SCRIPT" ]; then
+    echo -n "[3/4] マクロファイル (src/*.py)... "
+    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py")" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
-        echo -e "${RED}[NG] $MACRO_SCRIPT が見つかりません${NC}"
+        echo -e "${RED}[NG] src/ に .py ファイルが見つかりません${NC}"
     fi
 
     # 4. Bluetoothサービス

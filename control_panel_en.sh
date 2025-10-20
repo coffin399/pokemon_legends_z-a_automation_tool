@@ -8,7 +8,8 @@ NC='\033[0m' # No Color
 
 # --- Settings ---
 PROJECT_DIR="$HOME/switch-macro"
-MACRO_SCRIPT="src/switch_macro.py"
+# No longer specifying a single script, will select at runtime
+MACRO_SEARCH_PATTERN="python3 $PROJECT_DIR/src/.*\.py"
 
 # --- Function Definitions ---
 
@@ -20,7 +21,7 @@ display_status() {
     echo
 
     # Check macro status
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
         echo -e "Status    : ${GREEN}[Running]${NC}  Macro is running"
     else
         echo -e "Status    : ${YELLOW}[Stopped]${NC}  Macro is not running"
@@ -53,19 +54,53 @@ start_macro() {
     echo "  Start Macro"
     echo "========================================"
     echo
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
-        echo -e "${YELLOW}[WARNING] The macro is already running.${NC}"
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
+        echo -e "${YELLOW}[WARNING] A macro is already running.${NC}"
         read -p "Press Enter to return to the menu..."
         return
     fi
 
+    # Find .py files in the src directory and store them in an array
+    mapfile -t macro_files < <(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py" -printf "%f\n" | sort)
+
+    if [ ${#macro_files[@]} -eq 0 ]; then
+        echo -e "${RED}[ERROR] No runnable macro (.py file) found in the src/ directory.${NC}"
+        read -p "Press Enter to return to the menu..."
+        return
+    fi
+
+    echo "Select a macro to run:"
+    for i in "${!macro_files[@]}"; do
+        echo "  [$((i+1))] ${macro_files[$i]}"
+    done
+    echo "  [0] Return to menu"
+    echo
+
+    read -p "Selection: " choice
+
+    # Validate input
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 0 ] || [ "$choice" -gt ${#macro_files[@]} ]; then
+        echo -e "${RED}Invalid selection.${NC}"
+        sleep 2
+        return
+    fi
+
+    if [ "$choice" -eq 0 ]; then
+        return
+    fi
+
+    # Selected script
+    selected_script="${macro_files[$((choice-1))]}"
+    selected_script_path="src/$selected_script"
+
+    echo
     echo "Please open 'Change Grip/Order' on your Switch."
     read -p "Press Enter when you are ready..."
 
-    echo "Starting the macro in a new window..."
+    echo "Starting the macro ($selected_script) in a new window..."
 
     # Run in a new window using gnome-terminal
-    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$MACRO_SCRIPT'; exec bash"
+    gnome-terminal -- bash -c "cd '$PROJECT_DIR' && source .venv/bin/activate && sudo python3 '$selected_script_path'; exec bash"
 
     sleep 2
     echo
@@ -82,8 +117,8 @@ stop_macro() {
     echo "  Stop Macro"
     echo "========================================"
     echo
-    if pgrep -f "$MACRO_SCRIPT" > /dev/null; then
-        sudo pkill -f "$MACRO_SCRIPT"
+    if pgrep -f "$MACRO_SEARCH_PATTERN" > /dev/null; then
+        sudo pkill -f "$MACRO_SEARCH_PATTERN"
         echo -e "${GREEN}[SUCCESS] The macro has been stopped.${NC}"
     else
         echo -e "${YELLOW}[INFO] The macro was not running.${NC}"
@@ -151,11 +186,11 @@ run_test() {
     fi
 
     # 3. Macro file
-    echo -n "[3/4] Macro file... "
-    if [ -f "$PROJECT_DIR/$MACRO_SCRIPT" ]; then
+    echo -n "[3/4] Macro file (src/*.py)... "
+    if [ -n "$(find "$PROJECT_DIR/src" -maxdepth 1 -name "*.py")" ]; then
         echo -e "${GREEN}[OK]${NC}"
     else
-        echo -e "${RED}[FAIL] $MACRO_SCRIPT not found${NC}"
+        echo -e "${RED}[FAIL] No .py files found in src/${NC}"
     fi
 
     # 4. Bluetooth service
