@@ -1,9 +1,23 @@
-# 🎮 Pokemon Legends Z-A 自動金策ツール (Linux/Ubuntu版)
+# 🎮 Pokemon Legends Z-A Automation Tool (Linux/Ubuntu)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Ubuntu-orange)
 ![Language](https://img.shields.io/badge/Language-Python-blue.svg)
 ![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg)
+
+---
+
+## 📖 Language / 言語
+
+- [🇯🇵 日本語](README.md) (Current)
+- [🇺🇸 English](README_en.md)
+- [🇫🇷 Français](README_fr.md)
+- [🇩🇪 Deutsch](README_de.md)
+- [🇨🇳 简体中文](README_zh-CN.md)
+- [🇹🇼 繁體中文](README_zh-TW.md)
+- [🇪🇸 Español](README_es.md)
+
+---
 
 ![動作プレビュー](preview.gif)
 **超簡単！** スクリプト一つでNintendo Switchを自動操作できるツールです。
@@ -51,7 +65,9 @@ switch-macro/
 ├── 🎮 control_panel.sh        ← ★【これで操作】コントロールパネル
 │
 └── 📁 src/                    ← メインソースコード
-    └── switch_macro.py        ← マクロ実行スクリプト
+    ├── macro1.py              ← マクロ実行スクリプト
+    ├── others_macro.py        ← マクロ実行スクリプト
+    ...
 ```
 
 ### 🎯 どのファイルを使う？
@@ -82,14 +98,14 @@ switch-macro/
 以下のコマンドを**1つずつ**コピー＆ペーストして **Enter** を押してください。
 
 ```bash
-# 1. ダウンロードしたフォルダに移動します
-# 例: cd ~/Downloads/switch-macro
+# 1. Navigate to the downloaded folder
+# Example: cd ~/Downloads/switch-macro
 cd /path/to/your/switch-macro
 
-# 2. スクリプトに実行権限を与えます（初回のみ）
+# 2. Grant execution permission to the script (first time only)
 chmod +x set_up.sh
 
-# 3. セットアップスクリプトを実行します
+# 3. Run the setup script
 ./set_up.sh
 ```
 
@@ -112,10 +128,10 @@ chmod +x set_up.sh
 ターミナルで以下のコマンドを実行します。
 
 ```bash
-# 1. フォルダに移動
+# 1. Navigate to the folder
 cd /path/to/your/switch-macro
 
-# 2. コントロールパネルを起動
+# 2. Launch the control panel
 ./control_panel.sh
 ```
 
@@ -166,7 +182,7 @@ Bluetooth : [接続済] アダプタ有効
 | **CTRL+Y** | マクロ停止 |
 | **CTRL+C** | プログラム終了・切断 |
 
-### マクロの動作
+### マクロの動作 (レストラン用)
 
 ```
 1. ZLボタンを押す（0.5秒）
@@ -207,7 +223,7 @@ Bluetooth : [接続済] アダプタ有効
 
 2. **または手動で**
    ```bash
-   # ターミナルで実行
+   # Run in terminal
    sudo systemctl restart bluetooth
    sleep 3
    hciconfig
@@ -239,7 +255,7 @@ Bluetooth : [接続済] アダプタ有効
 
 2. **または手動で**
    ```bash
-   # ターミナルで実行
+   # Run in terminal
    sudo pkill -f switch_macro.py
    ```
 
@@ -272,19 +288,19 @@ Bluetooth : [接続済] アダプタ有効
 ```python
     def execute_macro(self):
         """
-        マクロを実行
-        ZL押す → 0.2秒後A追加 → 0.5秒後全部離す
+        Execute macro
+        Press ZL → Add A after 0.2s → Release all after 0.5s
         """
         try:
-            # マクロ定義：スペース区切りで同時押し
-            # 形式: "ボタン1 ボタン2 時間" または "時間" (待機のみ)
+            # Macro definition: simultaneous press separated by spaces
+            # Format: "button1 button2 time" or "time" (wait only)
             macro_sequence = (
-                "ZL 0.2s\n"  # ZLを0.2秒押す
-                "ZL A 0.5s\n"  # ZLとAを同時に0.5秒押す
-                "0.1s"  # 全ボタン離して0.1秒待機
+                "ZL 0.2s\n"  # Press ZL for 0.2s
+                "ZL A 0.5s\n"  # Press ZL and A simultaneously for 0.5s
+                "0.1s"  # Release all buttons and wait 0.1s
             )
 
-            # マクロを送信（block=Trueで完了まで待機）
+            # Send macro (block=True waits until completion)
             self.nxbt.macro(
                 self.controller_index,
                 macro_sequence,
@@ -294,7 +310,7 @@ Bluetooth : [接続済] アダプタ有効
             return True
 
         except Exception as e:
-            print(f"❌ マクロ実行エラー: {e}")
+            print(f"❌ Macro execution error: {e}")
             self.is_connected = False
             return False
 ```
