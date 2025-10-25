@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Legends Z-A Automation Tool - ドキュメント</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <meta name="description" content="Nintendo Switch用の自動化ツール。Pokemon Legends Z-Aのレストラン自動化をサポート。">
+    <meta name="keywords" content="Nintendo Switch, Pokemon, 自動化, マクロ, Linux, Ubuntu">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="assets/images/logo.png" alt="Pokemon Legends Z-A Automation Tool" class="logo-img">
+                <span class="logo-text">Pokemon Legends Z-A Automation Tool</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#home" class="nav-link">ホーム</a>
+                <a href="#features" class="nav-link">機能</a>
+                <a href="#installation" class="nav-link">インストール</a>
+                <a href="#usage" class="nav-link">使い方</a>
+                <a href="#macros" class="nav-link">マクロ</a>
+                <a href="#troubleshooting" class="nav-link">トラブルシューティング</a>
+                <a href="#languages" class="nav-link">🌐</a>
+            </div>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-container">
+                <div class="hero-content">
+                    <h1 class="hero-title">
+                        🎮 Pokemon Legends Z-A<br>
+                        <span class="gradient-text">Automation Tool</span>
+                    </h1>
+                    <p class="hero-description">
+                        Nintendo Switchを自動操作して、Pokemon Legends Z-Aのレストラン作業を効率化！
+                        <br>Linux/Ubuntu環境で動作する、初心者にも優しい自動化ツールです。
+                    </p>
+                    <div class="hero-badges">
+                        <span class="badge badge-primary">Linux対応</span>
+                        <span class="badge badge-secondary">初心者向け</span>
+                        <span class="badge badge-accent">MIT License</span>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="#installation" class="btn btn-primary">
+                            <span class="btn-icon">🚀</span>
+                            今すぐ始める
+                        </a>
+                        <a href="#features" class="btn btn-outline">
+                            <span class="btn-icon">📋</span>
+                            機能を見る
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="demo-container">
+                        <div class="demo-screen">
+                            <div class="demo-header">
+                                <div class="demo-dots">
+                                    <span class="dot red"></span>
+                                    <span class="dot yellow"></span>
+                                    <span class="dot green"></span>
+                                </div>
+                                <span class="demo-title">Nintendo Switch Macro Control Panel</span>
+                            </div>
+                            <div class="demo-content">
+                                <div class="demo-status">
+                                    <span class="status-label">Status:</span>
+                                    <span class="status-value running">[Running] Macro is running</span>
+                                </div>
+                                <div class="demo-status">
+                                    <span class="status-label">Bluetooth:</span>
+                                    <span class="status-value connected">[Active] Adapter is enabled</span>
+                                </div>
+                                <div class="demo-menu">
+                                    <div class="menu-item">[1] Start Macro</div>
+                                    <div class="menu-item">[2] Stop Macro</div>
+                                    <div class="menu-item">[3] Restart Bluetooth</div>
+                                    <div class="menu-item">[4] Environment Check</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2 class="section-title">✨ 主な機能</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">ZL+A自動連打</h3>
+                        <p class="feature-description">
+                            レストランでの作業を自動化。ZLボタンを押しながらAボタンを自動で連打し続けます。
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">簡単操作</h3>
+                        <p class="feature-description">
+                            ENTERキーで開始/停止、CTRL+Yで停止。プログラミング知識不要で誰でも使えます。
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <h3 class="feature-title">Bluetooth接続</h3>
+                        <p class="feature-description">
+                            Bluetooth経由でNintendo Switchに接続。ケーブル不要で快適に操作できます。
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛠️</div>
+                        <h3 class="feature-title">複数マクロ対応</h3>
+                        <p class="feature-description">
+                            4つの異なるレストラン用マクロを用意。用途に応じて使い分けできます。
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🌍</div>
+                        <h3 class="feature-title">多言語対応</h3>
+                        <p class="feature-description">
+                            日本語、英語、中国語、フランス語、ドイツ語、スペイン語に対応。
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3 class="feature-title">安全設計</h3>
+                        <p class="feature-description">
+                            教育目的で設計。オンラインゲームでの使用は推奨されません。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Installation Section -->
+        <section id="installation" class="installation">
+            <div class="container">
+                <h2 class="section-title">🚀 インストール方法</h2>
+                <div class="installation-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3 class="step-title">システム要件</h3>
+                            <div class="requirements">
+                                <div class="requirement-item">
+                                    <span class="requirement-icon">💻</span>
+                                    <span>Ubuntu 24.04 LTS (または他のDebian系Linux)</span>
+                                </div>
+                                <div class="requirement-item">
+                                    <span class="requirement-icon">📶</span>
+                                    <span>Bluetooth機能 (内蔵またはUSBアダプタ)</span>
+                                </div>
+                                <div class="requirement-item">
+                                    <span class="requirement-icon">🎮</span>
+                                    <span>Nintendo Switch本体</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3 class="step-title">プロジェクトのダウンロード</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">GitHubからクローン</span>
+                                    <button class="copy-btn" onclick="copyCode('clone-code')">📋</button>
+                                </div>
+                                <pre id="clone-code"><code>git clone https://github.com/coffin299/pokemon_legends_z-a_automation_tool.git
+cd pokemon_legends_z-a_automation_tool</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3 class="step-title">自動セットアップ</h3>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">ワンクリックセットアップ</span>
+                                    <button class="copy-btn" onclick="copyCode('setup-code')">📋</button>
+                                </div>
+                                <pre id="setup-code"><code># 実行権限を付与
+chmod +x setup.sh
+
+# セットアップを実行
+./setup.sh</code></pre>
+                            </div>
+                            <div class="warning-box">
+                                <span class="warning-icon">⚠️</span>
+                                <p>セットアップには管理者権限が必要です。パスワードの入力が求められます。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3 class="step-title">完了！</h3>
+                            <p>セットアップが完了したら、コントロールパネルを使用してマクロを実行できます。</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-title">コントロールパネル起動</span>
+                                    <button class="copy-btn" onclick="copyCode('control-code')">📋</button>
+                                </div>
+                                <pre id="control-code"><code>./control_panel.sh</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Section -->
+        <section id="usage" class="usage">
+            <div class="container">
+                <h2 class="section-title">🎮 使い方</h2>
+                <div class="usage-content">
+                    <div class="usage-steps">
+                        <div class="usage-step">
+                            <div class="step-icon">1️⃣</div>
+                            <div class="step-text">
+                                <h3>Switchの準備</h3>
+                                <p>ホーム → 「コントローラー」→ 「持ちかた/順番を変える」を開く</p>
+                            </div>
+                        </div>
+                        <div class="usage-step">
+                            <div class="step-icon">2️⃣</div>
+                            <div class="step-text">
+                                <h3>コントロールパネル起動</h3>
+                                <p><code>./control_panel.sh</code> を実行</p>
+                            </div>
+                        </div>
+                        <div class="usage-step">
+                            <div class="step-icon">3️⃣</div>
+                            <div class="step-text">
+                                <h3>マクロ選択</h3>
+                                <p>メニューから「1」を選択してマクロを開始</p>
+                            </div>
+                        </div>
+                        <div class="usage-step">
+                            <div class="step-icon">4️⃣</div>
+                            <div class="step-text">
+                                <h3>操作</h3>
+                                <p>ENTERキーで開始/停止、CTRL+Yで停止</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="usage-controls">
+                        <h3>🎮 操作方法</h3>
+                        <div class="controls-grid">
+                            <div class="control-item">
+                                <kbd>ENTER</kbd>
+                                <span>マクロ開始/停止/再開</span>
+                            </div>
+                            <div class="control-item">
+                                <kbd>Ctrl</kbd> + <kbd>Y</kbd>
+                                <span>マクロ停止</span>
+                            </div>
+                            <div class="control-item">
+                                <kbd>Ctrl</kbd> + <kbd>C</kbd>
+                                <span>プログラム終了</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Macros Section -->
+        <section id="macros" class="macros">
+            <div class="container">
+                <h2 class="section-title">🎯 利用可能なマクロ</h2>
+                <div class="macros-grid">
+                    <div class="macro-card">
+                        <div class="macro-header">
+                            <h3 class="macro-title">レストラン・フツー</h3>
+                            <span class="macro-type">基本</span>
+                        </div>
+                        <div class="macro-description">
+                            <p>基本的なZL+A連打マクロ。最もシンプルで安定した動作を提供します。</p>
+                        </div>
+                        <div class="macro-sequence">
+                            <h4>実行シーケンス:</h4>
+                            <ol>
+                                <li>ZLボタンを0.2秒押す</li>
+                                <li>ZL+Aを同時に0.5秒押す</li>
+                                <li>0.1秒待機</li>
+                                <li>繰り返し</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="macro-card">
+                        <div class="macro-header">
+                            <h3 class="macro-title">リストランテ ニ・リュー・ド・キワミ</h3>
+                            <span class="macro-type">高級</span>
+                        </div>
+                        <div class="macro-description">
+                            <p>高級レストラン用の複合マクロ。ZL+A+Y+Xの組み合わせで効率的な操作を実現。</p>
+                        </div>
+                        <div class="macro-sequence">
+                            <h4>実行シーケンス:</h4>
+                            <ol>
+                                <li>ZLボタンを0.2秒押す</li>
+                                <li>ZL+Aを同時に0.3秒押す</li>
+                                <li>ZL+Yを同時に0.3秒押す</li>
+                                <li>ZL+Xを同時に0.3秒押す</li>
+                                <li>0.1秒待機</li>
+                                <li>繰り返し</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="macro-card">
+                        <div class="macro-header">
+                            <h3 class="macro-title">restaurant_le_Nah</h3>
+                            <span class="macro-type">英語版</span>
+                        </div>
+                        <div class="macro-description">
+                            <p>英語版の基本マクロ。国際的なユーザー向けに最適化されています。</p>
+                        </div>
+                        <div class="macro-sequence">
+                            <h4>実行シーケンス:</h4>
+                            <ol>
+                                <li>ZLボタンを0.2秒押す</li>
+                                <li>ZL+Aを同時に0.5秒押す</li>
+                                <li>0.1秒待機</li>
+                                <li>繰り返し</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <div class="macro-card">
+                        <div class="macro-header">
+                            <h3 class="macro-title">restaurant_le_Yeah_and_Wow</h3>
+                            <span class="macro-type">複合</span>
+                        </div>
+                        <div class="macro-description">
+                            <p>複数のボタン組み合わせを使用した高度なマクロ。複雑な操作を自動化します。</p>
+                        </div>
+                        <div class="macro-sequence">
+                            <h4>実行シーケンス:</h4>
+                            <ol>
+                                <li>ZLボタンを0.2秒押す</li>
+                                <li>ZL+Aを同時に0.3秒押す</li>
+                                <li>ZL+Yを同時に0.3秒押す</li>
+                                <li>ZL+Xを同時に0.3秒押す</li>
+                                <li>繰り返し</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Troubleshooting Section -->
+        <section id="troubleshooting" class="troubleshooting">
+            <div class="container">
+                <h2 class="section-title">🔧 トラブルシューティング</h2>
+                <div class="troubleshooting-content">
+                    <div class="troubleshooting-grid">
+                        <div class="trouble-card">
+                            <div class="trouble-icon">🔍</div>
+                            <h3 class="trouble-title">環境チェック</h3>
+                            <p class="trouble-description">まずは環境チェックを実行して問題を特定しましょう。</p>
+                            <div class="trouble-solution">
+                                <code>./control_panel.sh</code> → 「4」環境チェック
+                            </div>
+                        </div>
+                        <div class="trouble-card">
+                            <div class="trouble-icon">📶</div>
+                            <h3 class="trouble-title">Bluetooth接続エラー</h3>
+                            <p class="trouble-description">Bluetoothアダプタが見つからない、接続できない場合の対処法。</p>
+                            <div class="trouble-solution">
+                                <ol>
+                                    <li>コントロールパネル → 「3」Bluetooth再起動</li>
+                                    <li>手動で <code>sudo systemctl restart bluetooth</code></li>
+                                    <li>Switchの「持ちかた/順番を変える」画面を確認</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="trouble-card">
+                            <div class="trouble-icon">⌨️</div>
+                            <h3 class="trouble-title">キー入力が効かない</h3>
+                            <p class="trouble-description">ENTERキーやCTRL+Yが反応しない場合の対処法。</p>
+                            <div class="trouble-solution">
+                                <ol>
+                                    <li>マクロ実行中のターミナルウィンドウをクリック</li>
+                                    <li>ウィンドウが選択状態であることを確認</li>
+                                    <li>ENTERキーまたはCTRL+Yを押す</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="trouble-card">
+                            <div class="trouble-icon">🛑</div>
+                            <h3 class="trouble-title">マクロが停止しない</h3>
+                            <p class="trouble-description">マクロが止まらない場合の強制停止方法。</p>
+                            <div class="trouble-solution">
+                                <ol>
+                                    <li>コントロールパネル → 「2」マクロ停止</li>
+                                    <li>手動で <code>sudo pkill -f switch_macro.py</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="trouble-card">
+                            <div class="trouble-icon">🔐</div>
+                            <h3 class="trouble-title">権限エラー</h3>
+                            <p class="trouble-description">Permission deniedエラーが発生する場合。</p>
+                            <div class="trouble-solution">
+                                <p>必ず <code>./control_panel.sh</code> を使用して起動してください。このスクリプトが内部で正しくsudoを使用します。</p>
+                            </div>
+                        </div>
+                        <div class="trouble-card">
+                            <div class="trouble-icon">🐍</div>
+                            <h3 class="trouble-title">Python環境エラー</h3>
+                            <p class="trouble-description">nxbt: command not foundなどのエラーが発生する場合。</p>
+                            <div class="trouble-solution">
+                                <p>必ず <code>./control_panel.sh</code> を使用して起動してください。このスクリプトが自動で仮想環境を有効にします。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Languages Section -->
+        <section id="languages" class="languages">
+            <div class="container">
+                <h2 class="section-title">🌍 多言語対応</h2>
+                <div class="languages-grid">
+                    <a href="README.md" class="language-card">
+                        <span class="language-flag">🇯🇵</span>
+                        <span class="language-name">日本語</span>
+                    </a>
+                    <a href="README_en.md" class="language-card">
+                        <span class="language-flag">🇺🇸</span>
+                        <span class="language-name">English</span>
+                    </a>
+                    <a href="README_zh-CN.md" class="language-card">
+                        <span class="language-flag">🇨🇳</span>
+                        <span class="language-name">简体中文</span>
+                    </a>
+                    <a href="README_zh-TW.md" class="language-card">
+                        <span class="language-flag">🇹🇼</span>
+                        <span class="language-name">繁體中文</span>
+                    </a>
+                    <a href="README_es.md" class="language-card">
+                        <span class="language-flag">🇪🇸</span>
+                        <span class="language-name">Español</span>
+                    </a>
+                    <a href="README_fr.md" class="language-card">
+                        <span class="language-flag">🇫🇷</span>
+                        <span class="language-name">Français</span>
+                    </a>
+                    <a href="README_de.md" class="language-card">
+                        <span class="language-flag">🇩🇪</span>
+                        <span class="language-name">Deutsch</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Disclaimer Section -->
+        <section class="disclaimer">
+            <div class="container">
+                <div class="disclaimer-content">
+                    <h2 class="disclaimer-title">⚠️ 重要な注意事項</h2>
+                    <div class="disclaimer-warning">
+                        <div class="warning-icon">🚨</div>
+                        <div class="warning-content">
+                            <h3>BANのリスク</h3>
+                            <p>このツールは連射コントローラー/マクロコントローラー同様の自動化ツールです。</p>
+                            <ul>
+                                <li>Nintendo利用規約違反の可能性があります</li>
+                                <li>本体・アカウントBANの可能性があります</li>
+                                <li>オンライン機能が使用できなくなる可能性があります</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="disclaimer-safe">
+                        <div class="safe-icon">✅</div>
+                        <div class="safe-content">
+                            <h3>安全な使用条件</h3>
+                            <ul>
+                                <li>完全オフライン専用のSwitch</li>
+                                <li>サブ機での使用</li>
+                                <li>シングルプレイゲームのみ</li>
+                                <li>教育・研究目的</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="disclaimer-legal">
+                        <p><strong>法的責任:</strong> 作成者は使用によって生じたいかなる損害やBANについても責任を負いません。使用は完全に自己責任です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>Pokemon Legends Z-A Automation Tool</h3>
+                    <p>Nintendo Switch用の自動化ツール</p>
+                    <div class="footer-badges">
+                        <span class="badge badge-outline">MIT License</span>
+                        <span class="badge badge-outline">Linux対応</span>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>ドキュメント</h4>
+                        <a href="#installation">インストール</a>
+                        <a href="#usage">使い方</a>
+                        <a href="#macros">マクロ</a>
+                        <a href="#troubleshooting">トラブルシューティング</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>サポート</h4>
+                        <a href="https://github.com/coffin299/pokemon_legends_z-a_automation_tool/issues">GitHub Issues</a>
+                        <a href="https://github.com/coffin299/pokemon_legends_z-a_automation_tool">GitHub Repository</a>
+                    </div>
+                    <div class="footer-section">
+                        <h4>作成者</h4>
+                        <p>coffin299と愉快な仲間たち</p>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 coffin299. All rights reserved. | MIT License</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
