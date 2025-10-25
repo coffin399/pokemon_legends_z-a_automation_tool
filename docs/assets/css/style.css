@@ -152,14 +152,10 @@ body {
     text-decoration: none;
 }
 
-.logo-img {
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--radius-md);
-}
-
 .logo-text {
-    display: none;
+    font-weight: 700;
+    font-size: var(--text-lg);
+    color: var(--text-primary);
 }
 
 .nav-menu {
