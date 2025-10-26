@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://coffin299.github.io/pokemon_legends_z-a_automation_tool/sitemap.xml
